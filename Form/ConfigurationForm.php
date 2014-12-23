@@ -1,0 +1,105 @@
+<?php
+/*************************************************************************************/
+/*      This file is part of the Thelia package.                                     */
+/*                                                                                   */
+/*      Copyright (c) OpenStudio                                                     */
+/*      email : dev@thelia.net                                                       */
+/*      web : http://www.thelia.net                                                  */
+/*                                                                                   */
+/*      For the full copyright and license information, please view the LICENSE.txt  */
+/*      file that was distributed with this source code.                             */
+/*************************************************************************************/
+
+
+namespace CustomDelivery\Form;
+
+use CustomDelivery\CustomDelivery;
+use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Thelia\Form\BaseForm;
+use VirtualProductGereso\VirtualProductGereso;
+
+/**
+ * Class ConfigurationForm
+ * @package VirtualProductGereso\Form
+ * @author Julien Chanséaume <jchanseaume@openstudio.fr>
+ */
+class ConfigurationForm extends BaseForm
+{
+    protected function trans($id, array $parameters = [])
+    {
+        return $this->translator->trans($id, $parameters, CustomDelivery::getModuleCode());
+    }
+
+    protected function buildForm()
+    {
+        $form = $this->formBuilder;
+
+        $config = CustomDelivery::getConfig();
+
+        $form
+            ->add(
+                "url",
+                "text",
+                [
+                    'constraints' => [
+                        new NotBlank()
+                    ],
+                    'data' => $config['url'],
+                    'label' => $this->trans("Tracking URL"),
+                    'label_attr' => [
+                        'for' => "url",
+                        'help' => $this->trans(
+                            "The tracking URL. %ID% will be replaced by the tracking number entered in the order"
+                        )
+                    ],
+                ]
+            )
+            ->add(
+                "method",
+                "choice",
+                [
+                    'constraints' => [
+                        new NotBlank(),
+                        new GreaterThanOrEqual(['value' => 0])
+                    ],
+                    "choices" => [
+                        CustomDelivery::METHOD_PRICE_WEIGHT => $this->trans("Price and weight"),
+                        CustomDelivery::METHOD_PRICE => $this->trans("Price"),
+                        CustomDelivery::METHOD_WEIGHT => $this->trans("Weight"),
+                    ],
+                    'label' => $this->trans("Method"),
+                    'label_attr' => [
+                        'for' => "method",
+                        'help' => $this->trans(
+                            "The method used to select the right slice."
+                        )
+                    ],
+                ]
+            )
+            ->add(
+                "tax",
+                "tax_rule_id",
+                [
+                    'required' => false,
+                    'data' => $config['tax'],
+                    'label' => $this->trans("Tax rule"),
+                    'label_attr' => [
+                        'for' => "method",
+                        'help' => $this->trans(
+                            "The tax rule used to calculate postage taxes."
+                        )
+                    ],
+                ]
+            )
+        ;
+    }
+
+    /**
+     * @return string the name of you form. This name must be unique
+     */
+    public function getName()
+    {
+        return "customdelivery-configuration-form";
+    }
+}

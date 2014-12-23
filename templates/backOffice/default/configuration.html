@@ -1,0 +1,123 @@
+<!-- Configuration -->
+<div class="general-block-decorator">
+    <div class="row">
+
+        <div class="col-md-12 title title-without-tabs">
+            {intl d='customdelivery.bo.default' l='Configuration.'}
+        </div>
+
+        <div class="form-container">
+            <div class="col-md-12">
+
+                {form name="customdelivery.configuration.form"}
+                <form method="POST" id="customdelivery-form" action="{url path="/admin/module/customdelivery/configuration"}" {form_enctype form=$form} class="clearfix">
+
+                {if $form_error_message}<div class="alert alert-danger">{$form_error_message}</div>{/if}
+
+                {form_hidden_fields form=$form}
+
+                {render_form_field form=$form field="url"}
+                {render_form_field form=$form field="method"}
+                {render_form_field form=$form field=""}
+
+                <button type="submit" id="vpg-save" name="customdelivery_save" value="save" class="form-submit-button btn btn-sm btn-default" title="{intl d='customdelivery.bo.default' l='Save'}">{intl d='virtualproductgereso.ai' l='Save'}</button>
+
+                </form>
+                {/form}
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- slices -->
+<div class="general-block-decorator">
+    <div class="row">
+
+        <div class="col-md-12 title title-without-tabs">
+            {intl d='customdelivery.bo.default' l='Slices.'}
+        </div>
+
+        <div class="form-container">
+
+            {loop type="area" module_id=$module_id backend_context=true}
+                {$area_id=$ID}
+                <div class="col-md-12">
+                    {$NAME}
+                </div>
+                <div class="col-md-12">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-condensed table-left-aligned">
+                            <caption class="clearfix">
+                                {intl d='customdelivery.bo.default' l="Area : "}{$NAME}
+                            </caption>
+                            <thead>
+                                <tr>
+                                    {if $method != 2}<th class="col-md-3">{intl d='customdelivery.bo.default' l="Price up to ... "}</th>{/if}
+                                    {if $method != 1}<th class="col-md-3">{intl d='customdelivery.bo.default' l="Weight up to ... (kg)"}</th>{/if}
+                                    <th class="col-md-5">{intl d='customdelivery.bo.default' l="Price (€)"}</th>
+                                    <th class="col-md-1">{intl d='customdelivery.bo.default' l="Actions"}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loop type="custom-delivery-slice" name="custom-delivery-slice"}
+                                    <tr class="js-slice" data-area="{$area_id}" data-id="{$ID}">
+                                        {if $method != 2}
+                                        <th class="col-md-3">
+                                            <input type="text" class="js-slice-price-max" value="{$PRICE_MAX}" />
+                                        </th>
+                                        {/if}
+                                        {if $method != 1}
+                                        <th class="col-md-3">
+                                            <input type="text" class="js-slice-weight-max" value="{$PRICE_WEIGHT}" />
+                                        </th>
+                                        {/if}
+                                        <th class="col-md-5">
+                                            <input type="text" class="js-slice-price" value="{$PRICE}" />
+                                        </th>
+                                        <th class="col-md-1">
+                                            <div class="btn-group">
+                                                {loop type="auth" name="can_change" role="ADMIN" module="customdelivery" access="DELETE"}
+                                                <a class="btn btn-default btn-xs" title="{intl d='customdelivery.bo.default' l='Delete this price slice'}" href="#price_slice_delete_dialog_{$ID}_{$MAX_WEIGHT|replace:'.':'-'}" data-toggle="modal">
+                                                    <span class="glyphicon glyphicon-trash"></span>
+                                                </a>
+                                                {/loop}
+                                            </div>
+                                        </th>
+                                    </tr>
+                                {/loop}
+                                <tr class="js-slice-new" data-area="{$area_id}" data-id="0">
+                                    {if $method != 2}
+                                        <th class="col-md-3">
+                                            <input type="text" class="js-slice-price-max" value="" />
+                                        </th>
+                                    {/if}
+                                    {if $method != 1}
+                                        <th class="col-md-3">
+                                            <input type="text" class="js-slice-weight-max" value="" />
+                                        </th>
+                                    {/if}
+                                    <th class="col-md-5">
+                                        <input type="text" class="js-slice-price" value="" />
+                                    </th>
+                                    <th class="col-md-1">
+                                        {loop type="auth" name="can_change" role="ADMIN" module="customdelivery" access="CREATE"}
+                                        <a class="btn btn-default btn-xs" title="{intl d='customdelivery.bo.default' l='Add this price slice'}" >
+                                            <span class="glyphicon glyphicon-plus"></span>
+                                        </a>
+                                        {/loop}
+                                    </th>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            {/loop}
+
+        </div>
+
+    </div>
+</div>

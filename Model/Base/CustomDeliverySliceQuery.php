@@ -27,16 +27,12 @@ use Thelia\Model\Area;
  * @method     ChildCustomDeliverySliceQuery orderByPriceMax($order = Criteria::ASC) Order by the price_max column
  * @method     ChildCustomDeliverySliceQuery orderByWeightMax($order = Criteria::ASC) Order by the weight_max column
  * @method     ChildCustomDeliverySliceQuery orderByPrice($order = Criteria::ASC) Order by the price column
- * @method     ChildCustomDeliverySliceQuery orderByCreatedAt($order = Criteria::ASC) Order by the created_at column
- * @method     ChildCustomDeliverySliceQuery orderByUpdatedAt($order = Criteria::ASC) Order by the updated_at column
  *
  * @method     ChildCustomDeliverySliceQuery groupById() Group by the id column
  * @method     ChildCustomDeliverySliceQuery groupByAreaId() Group by the area_id column
  * @method     ChildCustomDeliverySliceQuery groupByPriceMax() Group by the price_max column
  * @method     ChildCustomDeliverySliceQuery groupByWeightMax() Group by the weight_max column
  * @method     ChildCustomDeliverySliceQuery groupByPrice() Group by the price column
- * @method     ChildCustomDeliverySliceQuery groupByCreatedAt() Group by the created_at column
- * @method     ChildCustomDeliverySliceQuery groupByUpdatedAt() Group by the updated_at column
  *
  * @method     ChildCustomDeliverySliceQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildCustomDeliverySliceQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -51,19 +47,15 @@ use Thelia\Model\Area;
  *
  * @method     ChildCustomDeliverySlice findOneById(int $id) Return the first ChildCustomDeliverySlice filtered by the id column
  * @method     ChildCustomDeliverySlice findOneByAreaId(int $area_id) Return the first ChildCustomDeliverySlice filtered by the area_id column
- * @method     ChildCustomDeliverySlice findOneByPriceMax(int $price_max) Return the first ChildCustomDeliverySlice filtered by the price_max column
+ * @method     ChildCustomDeliverySlice findOneByPriceMax(double $price_max) Return the first ChildCustomDeliverySlice filtered by the price_max column
  * @method     ChildCustomDeliverySlice findOneByWeightMax(double $weight_max) Return the first ChildCustomDeliverySlice filtered by the weight_max column
  * @method     ChildCustomDeliverySlice findOneByPrice(double $price) Return the first ChildCustomDeliverySlice filtered by the price column
- * @method     ChildCustomDeliverySlice findOneByCreatedAt(string $created_at) Return the first ChildCustomDeliverySlice filtered by the created_at column
- * @method     ChildCustomDeliverySlice findOneByUpdatedAt(string $updated_at) Return the first ChildCustomDeliverySlice filtered by the updated_at column
  *
  * @method     array findById(int $id) Return ChildCustomDeliverySlice objects filtered by the id column
  * @method     array findByAreaId(int $area_id) Return ChildCustomDeliverySlice objects filtered by the area_id column
- * @method     array findByPriceMax(int $price_max) Return ChildCustomDeliverySlice objects filtered by the price_max column
+ * @method     array findByPriceMax(double $price_max) Return ChildCustomDeliverySlice objects filtered by the price_max column
  * @method     array findByWeightMax(double $weight_max) Return ChildCustomDeliverySlice objects filtered by the weight_max column
  * @method     array findByPrice(double $price) Return ChildCustomDeliverySlice objects filtered by the price column
- * @method     array findByCreatedAt(string $created_at) Return ChildCustomDeliverySlice objects filtered by the created_at column
- * @method     array findByUpdatedAt(string $updated_at) Return ChildCustomDeliverySlice objects filtered by the updated_at column
  *
  */
 abstract class CustomDeliverySliceQuery extends ModelCriteria
@@ -152,7 +144,7 @@ abstract class CustomDeliverySliceQuery extends ModelCriteria
      */
     protected function findPkSimple($key, $con)
     {
-        $sql = 'SELECT ID, AREA_ID, PRICE_MAX, WEIGHT_MAX, PRICE, CREATED_AT, UPDATED_AT FROM custom_delivery_slice WHERE ID = :p0';
+        $sql = 'SELECT ID, AREA_ID, PRICE_MAX, WEIGHT_MAX, PRICE FROM custom_delivery_slice WHERE ID = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -449,92 +441,6 @@ abstract class CustomDeliverySliceQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query on the created_at column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByCreatedAt('2011-03-14'); // WHERE created_at = '2011-03-14'
-     * $query->filterByCreatedAt('now'); // WHERE created_at = '2011-03-14'
-     * $query->filterByCreatedAt(array('max' => 'yesterday')); // WHERE created_at > '2011-03-13'
-     * </code>
-     *
-     * @param     mixed $createdAt The value to use as filter.
-     *              Values can be integers (unix timestamps), DateTime objects, or strings.
-     *              Empty strings are treated as NULL.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return ChildCustomDeliverySliceQuery The current query, for fluid interface
-     */
-    public function filterByCreatedAt($createdAt = null, $comparison = null)
-    {
-        if (is_array($createdAt)) {
-            $useMinMax = false;
-            if (isset($createdAt['min'])) {
-                $this->addUsingAlias(CustomDeliverySliceTableMap::CREATED_AT, $createdAt['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($createdAt['max'])) {
-                $this->addUsingAlias(CustomDeliverySliceTableMap::CREATED_AT, $createdAt['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        return $this->addUsingAlias(CustomDeliverySliceTableMap::CREATED_AT, $createdAt, $comparison);
-    }
-
-    /**
-     * Filter the query on the updated_at column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByUpdatedAt('2011-03-14'); // WHERE updated_at = '2011-03-14'
-     * $query->filterByUpdatedAt('now'); // WHERE updated_at = '2011-03-14'
-     * $query->filterByUpdatedAt(array('max' => 'yesterday')); // WHERE updated_at > '2011-03-13'
-     * </code>
-     *
-     * @param     mixed $updatedAt The value to use as filter.
-     *              Values can be integers (unix timestamps), DateTime objects, or strings.
-     *              Empty strings are treated as NULL.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return ChildCustomDeliverySliceQuery The current query, for fluid interface
-     */
-    public function filterByUpdatedAt($updatedAt = null, $comparison = null)
-    {
-        if (is_array($updatedAt)) {
-            $useMinMax = false;
-            if (isset($updatedAt['min'])) {
-                $this->addUsingAlias(CustomDeliverySliceTableMap::UPDATED_AT, $updatedAt['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($updatedAt['max'])) {
-                $this->addUsingAlias(CustomDeliverySliceTableMap::UPDATED_AT, $updatedAt['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        return $this->addUsingAlias(CustomDeliverySliceTableMap::UPDATED_AT, $updatedAt, $comparison);
-    }
-
-    /**
      * Filter the query by a related \Thelia\Model\Area object
      *
      * @param \Thelia\Model\Area|ObjectCollection $area The related object(s) to use as filter
@@ -698,72 +604,6 @@ abstract class CustomDeliverySliceQuery extends ModelCriteria
             $con->rollBack();
             throw $e;
         }
-    }
-
-    // timestampable behavior
-
-    /**
-     * Filter by the latest updated
-     *
-     * @param      int $nbDays Maximum age of the latest update in days
-     *
-     * @return     ChildCustomDeliverySliceQuery The current query, for fluid interface
-     */
-    public function recentlyUpdated($nbDays = 7)
-    {
-        return $this->addUsingAlias(CustomDeliverySliceTableMap::UPDATED_AT, time() - $nbDays * 24 * 60 * 60, Criteria::GREATER_EQUAL);
-    }
-
-    /**
-     * Filter by the latest created
-     *
-     * @param      int $nbDays Maximum age of in days
-     *
-     * @return     ChildCustomDeliverySliceQuery The current query, for fluid interface
-     */
-    public function recentlyCreated($nbDays = 7)
-    {
-        return $this->addUsingAlias(CustomDeliverySliceTableMap::CREATED_AT, time() - $nbDays * 24 * 60 * 60, Criteria::GREATER_EQUAL);
-    }
-
-    /**
-     * Order by update date desc
-     *
-     * @return     ChildCustomDeliverySliceQuery The current query, for fluid interface
-     */
-    public function lastUpdatedFirst()
-    {
-        return $this->addDescendingOrderByColumn(CustomDeliverySliceTableMap::UPDATED_AT);
-    }
-
-    /**
-     * Order by update date asc
-     *
-     * @return     ChildCustomDeliverySliceQuery The current query, for fluid interface
-     */
-    public function firstUpdatedFirst()
-    {
-        return $this->addAscendingOrderByColumn(CustomDeliverySliceTableMap::UPDATED_AT);
-    }
-
-    /**
-     * Order by create date desc
-     *
-     * @return     ChildCustomDeliverySliceQuery The current query, for fluid interface
-     */
-    public function lastCreatedFirst()
-    {
-        return $this->addDescendingOrderByColumn(CustomDeliverySliceTableMap::CREATED_AT);
-    }
-
-    /**
-     * Order by create date asc
-     *
-     * @return     ChildCustomDeliverySliceQuery The current query, for fluid interface
-     */
-    public function firstCreatedFirst()
-    {
-        return $this->addAscendingOrderByColumn(CustomDeliverySliceTableMap::CREATED_AT);
     }
 
 } // CustomDeliverySliceQuery

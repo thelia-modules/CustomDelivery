@@ -2,10 +2,8 @@
 
 namespace CustomDelivery\Model\Base;
 
-use \DateTime;
 use \Exception;
 use \PDO;
-use CustomDelivery\Model\CustomDeliverySlice as ChildCustomDeliverySlice;
 use CustomDelivery\Model\CustomDeliverySliceQuery as ChildCustomDeliverySliceQuery;
 use CustomDelivery\Model\Map\CustomDeliverySliceTableMap;
 use Propel\Runtime\Propel;
@@ -18,7 +16,6 @@ use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Parser\AbstractParser;
-use Propel\Runtime\Util\PropelDateTime;
 use Thelia\Model\AreaQuery;
 use Thelia\Model\Area as ChildArea;
 
@@ -71,7 +68,7 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
     /**
      * The value for the price_max field.
      * Note: this column has a database default value of: 0
-     * @var        int
+     * @var        double
      */
     protected $price_max;
 
@@ -88,18 +85,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
      * @var        double
      */
     protected $price;
-
-    /**
-     * The value for the created_at field.
-     * @var        string
-     */
-    protected $created_at;
-
-    /**
-     * The value for the updated_at field.
-     * @var        string
-     */
-    protected $updated_at;
 
     /**
      * @var        Area
@@ -412,7 +397,7 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
     /**
      * Get the [price_max] column value.
      *
-     * @return   int
+     * @return   double
      */
     public function getPriceMax()
     {
@@ -440,46 +425,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
     {
 
         return $this->price;
-    }
-
-    /**
-     * Get the [optionally formatted] temporal [created_at] column value.
-     *
-     *
-     * @param      string $format The date/time format string (either date()-style or strftime()-style).
-     *                            If format is NULL, then the raw \DateTime object will be returned.
-     *
-     * @return mixed Formatted date/time value as string or \DateTime object (if format is NULL), NULL if column is NULL, and 0 if column value is 0000-00-00 00:00:00
-     *
-     * @throws PropelException - if unable to parse/validate the date/time value.
-     */
-    public function getCreatedAt($format = NULL)
-    {
-        if ($format === null) {
-            return $this->created_at;
-        } else {
-            return $this->created_at instanceof \DateTime ? $this->created_at->format($format) : null;
-        }
-    }
-
-    /**
-     * Get the [optionally formatted] temporal [updated_at] column value.
-     *
-     *
-     * @param      string $format The date/time format string (either date()-style or strftime()-style).
-     *                            If format is NULL, then the raw \DateTime object will be returned.
-     *
-     * @return mixed Formatted date/time value as string or \DateTime object (if format is NULL), NULL if column is NULL, and 0 if column value is 0000-00-00 00:00:00
-     *
-     * @throws PropelException - if unable to parse/validate the date/time value.
-     */
-    public function getUpdatedAt($format = NULL)
-    {
-        if ($format === null) {
-            return $this->updated_at;
-        } else {
-            return $this->updated_at instanceof \DateTime ? $this->updated_at->format($format) : null;
-        }
     }
 
     /**
@@ -531,13 +476,13 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
     /**
      * Set the value of [price_max] column.
      *
-     * @param      int $v new value
+     * @param      double $v new value
      * @return   \CustomDelivery\Model\CustomDeliverySlice The current object (for fluent API support)
      */
     public function setPriceMax($v)
     {
         if ($v !== null) {
-            $v = (int) $v;
+            $v = (double) $v;
         }
 
         if ($this->price_max !== $v) {
@@ -590,48 +535,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
 
         return $this;
     } // setPrice()
-
-    /**
-     * Sets the value of [created_at] column to a normalized version of the date/time value specified.
-     *
-     * @param      mixed $v string, integer (timestamp), or \DateTime value.
-     *               Empty strings are treated as NULL.
-     * @return   \CustomDelivery\Model\CustomDeliverySlice The current object (for fluent API support)
-     */
-    public function setCreatedAt($v)
-    {
-        $dt = PropelDateTime::newInstance($v, null, '\DateTime');
-        if ($this->created_at !== null || $dt !== null) {
-            if ($dt !== $this->created_at) {
-                $this->created_at = $dt;
-                $this->modifiedColumns[CustomDeliverySliceTableMap::CREATED_AT] = true;
-            }
-        } // if either are not null
-
-
-        return $this;
-    } // setCreatedAt()
-
-    /**
-     * Sets the value of [updated_at] column to a normalized version of the date/time value specified.
-     *
-     * @param      mixed $v string, integer (timestamp), or \DateTime value.
-     *               Empty strings are treated as NULL.
-     * @return   \CustomDelivery\Model\CustomDeliverySlice The current object (for fluent API support)
-     */
-    public function setUpdatedAt($v)
-    {
-        $dt = PropelDateTime::newInstance($v, null, '\DateTime');
-        if ($this->updated_at !== null || $dt !== null) {
-            if ($dt !== $this->updated_at) {
-                $this->updated_at = $dt;
-                $this->modifiedColumns[CustomDeliverySliceTableMap::UPDATED_AT] = true;
-            }
-        } // if either are not null
-
-
-        return $this;
-    } // setUpdatedAt()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -689,25 +592,13 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
             $this->area_id = (null !== $col) ? (int) $col : null;
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : CustomDeliverySliceTableMap::translateFieldName('PriceMax', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->price_max = (null !== $col) ? (int) $col : null;
+            $this->price_max = (null !== $col) ? (double) $col : null;
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : CustomDeliverySliceTableMap::translateFieldName('WeightMax', TableMap::TYPE_PHPNAME, $indexType)];
             $this->weight_max = (null !== $col) ? (double) $col : null;
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : CustomDeliverySliceTableMap::translateFieldName('Price', TableMap::TYPE_PHPNAME, $indexType)];
             $this->price = (null !== $col) ? (double) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : CustomDeliverySliceTableMap::translateFieldName('CreatedAt', TableMap::TYPE_PHPNAME, $indexType)];
-            if ($col === '0000-00-00 00:00:00') {
-                $col = null;
-            }
-            $this->created_at = (null !== $col) ? PropelDateTime::newInstance($col, null, '\DateTime') : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : CustomDeliverySliceTableMap::translateFieldName('UpdatedAt', TableMap::TYPE_PHPNAME, $indexType)];
-            if ($col === '0000-00-00 00:00:00') {
-                $col = null;
-            }
-            $this->updated_at = (null !== $col) ? PropelDateTime::newInstance($col, null, '\DateTime') : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -716,7 +607,7 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 7; // 7 = CustomDeliverySliceTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 5; // 5 = CustomDeliverySliceTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException("Error populating \CustomDelivery\Model\CustomDeliverySlice object", 0, $e);
@@ -851,19 +742,8 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
             $ret = $this->preSave($con);
             if ($isInsert) {
                 $ret = $ret && $this->preInsert($con);
-                // timestampable behavior
-                if (!$this->isColumnModified(CustomDeliverySliceTableMap::CREATED_AT)) {
-                    $this->setCreatedAt(time());
-                }
-                if (!$this->isColumnModified(CustomDeliverySliceTableMap::UPDATED_AT)) {
-                    $this->setUpdatedAt(time());
-                }
             } else {
                 $ret = $ret && $this->preUpdate($con);
-                // timestampable behavior
-                if ($this->isModified() && !$this->isColumnModified(CustomDeliverySliceTableMap::UPDATED_AT)) {
-                    $this->setUpdatedAt(time());
-                }
             }
             if ($ret) {
                 $affectedRows = $this->doSave($con);
@@ -967,12 +847,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
         if ($this->isColumnModified(CustomDeliverySliceTableMap::PRICE)) {
             $modifiedColumns[':p' . $index++]  = 'PRICE';
         }
-        if ($this->isColumnModified(CustomDeliverySliceTableMap::CREATED_AT)) {
-            $modifiedColumns[':p' . $index++]  = 'CREATED_AT';
-        }
-        if ($this->isColumnModified(CustomDeliverySliceTableMap::UPDATED_AT)) {
-            $modifiedColumns[':p' . $index++]  = 'UPDATED_AT';
-        }
 
         $sql = sprintf(
             'INSERT INTO custom_delivery_slice (%s) VALUES (%s)',
@@ -991,19 +865,13 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
                         $stmt->bindValue($identifier, $this->area_id, PDO::PARAM_INT);
                         break;
                     case 'PRICE_MAX':
-                        $stmt->bindValue($identifier, $this->price_max, PDO::PARAM_INT);
+                        $stmt->bindValue($identifier, $this->price_max, PDO::PARAM_STR);
                         break;
                     case 'WEIGHT_MAX':
                         $stmt->bindValue($identifier, $this->weight_max, PDO::PARAM_STR);
                         break;
                     case 'PRICE':
                         $stmt->bindValue($identifier, $this->price, PDO::PARAM_STR);
-                        break;
-                    case 'CREATED_AT':
-                        $stmt->bindValue($identifier, $this->created_at ? $this->created_at->format("Y-m-d H:i:s") : null, PDO::PARAM_STR);
-                        break;
-                    case 'UPDATED_AT':
-                        $stmt->bindValue($identifier, $this->updated_at ? $this->updated_at->format("Y-m-d H:i:s") : null, PDO::PARAM_STR);
                         break;
                 }
             }
@@ -1082,12 +950,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
             case 4:
                 return $this->getPrice();
                 break;
-            case 5:
-                return $this->getCreatedAt();
-                break;
-            case 6:
-                return $this->getUpdatedAt();
-                break;
             default:
                 return null;
                 break;
@@ -1122,8 +984,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
             $keys[2] => $this->getPriceMax(),
             $keys[3] => $this->getWeightMax(),
             $keys[4] => $this->getPrice(),
-            $keys[5] => $this->getCreatedAt(),
-            $keys[6] => $this->getUpdatedAt(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1183,12 +1043,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
             case 4:
                 $this->setPrice($value);
                 break;
-            case 5:
-                $this->setCreatedAt($value);
-                break;
-            case 6:
-                $this->setUpdatedAt($value);
-                break;
         } // switch()
     }
 
@@ -1218,8 +1072,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
         if (array_key_exists($keys[2], $arr)) $this->setPriceMax($arr[$keys[2]]);
         if (array_key_exists($keys[3], $arr)) $this->setWeightMax($arr[$keys[3]]);
         if (array_key_exists($keys[4], $arr)) $this->setPrice($arr[$keys[4]]);
-        if (array_key_exists($keys[5], $arr)) $this->setCreatedAt($arr[$keys[5]]);
-        if (array_key_exists($keys[6], $arr)) $this->setUpdatedAt($arr[$keys[6]]);
     }
 
     /**
@@ -1236,8 +1088,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
         if ($this->isColumnModified(CustomDeliverySliceTableMap::PRICE_MAX)) $criteria->add(CustomDeliverySliceTableMap::PRICE_MAX, $this->price_max);
         if ($this->isColumnModified(CustomDeliverySliceTableMap::WEIGHT_MAX)) $criteria->add(CustomDeliverySliceTableMap::WEIGHT_MAX, $this->weight_max);
         if ($this->isColumnModified(CustomDeliverySliceTableMap::PRICE)) $criteria->add(CustomDeliverySliceTableMap::PRICE, $this->price);
-        if ($this->isColumnModified(CustomDeliverySliceTableMap::CREATED_AT)) $criteria->add(CustomDeliverySliceTableMap::CREATED_AT, $this->created_at);
-        if ($this->isColumnModified(CustomDeliverySliceTableMap::UPDATED_AT)) $criteria->add(CustomDeliverySliceTableMap::UPDATED_AT, $this->updated_at);
 
         return $criteria;
     }
@@ -1305,8 +1155,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
         $copyObj->setPriceMax($this->getPriceMax());
         $copyObj->setWeightMax($this->getWeightMax());
         $copyObj->setPrice($this->getPrice());
-        $copyObj->setCreatedAt($this->getCreatedAt());
-        $copyObj->setUpdatedAt($this->getUpdatedAt());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1396,8 +1244,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
         $this->price_max = null;
         $this->weight_max = null;
         $this->price = null;
-        $this->created_at = null;
-        $this->updated_at = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();
@@ -1431,20 +1277,6 @@ abstract class CustomDeliverySlice implements ActiveRecordInterface
     public function __toString()
     {
         return (string) $this->exportTo(CustomDeliverySliceTableMap::DEFAULT_STRING_FORMAT);
-    }
-
-    // timestampable behavior
-
-    /**
-     * Mark the current object so that the update date doesn't get updated during next save
-     *
-     * @return     ChildCustomDeliverySlice The current object (for fluent API support)
-     */
-    public function keepUpdateDateUnchanged()
-    {
-        $this->modifiedColumns[CustomDeliverySliceTableMap::UPDATED_AT] = true;
-
-        return $this;
     }
 
     /**

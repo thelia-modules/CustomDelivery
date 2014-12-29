@@ -14,23 +14,17 @@
 namespace CustomDelivery\Controller;
 
 use CustomDelivery\CustomDelivery;
+use CustomDelivery\Form\ConfigurationForm;
+use CustomDelivery\Model\CustomDeliverySlice;
+use CustomDelivery\Model\CustomDeliverySliceQuery;
+use Propel\Runtime\Map\TableMap;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Form\Exception\FormValidationException;
-use Thelia\Model\Base\CustomerQuery;
 use Thelia\Model\ConfigQuery;
-use Thelia\Model\MetaData;
-use Thelia\Model\MetaDataQuery;
-use Thelia\Model\ProductDocument;
-use Thelia\Model\ProductDocumentQuery;
-use Thelia\Model\ProductSaleElementsQuery;
 use Thelia\Tools\URL;
-use VirtualProductGereso\Form\ConfigurationForm;
-use VirtualProductGereso\Model\VirtualOrderProduct;
-use VirtualProductGereso\Model\VirtualOrderProductQuery;
-use VirtualProductGereso\VirtualProductGereso;
 
 /**
  * Class BackController
@@ -39,55 +33,148 @@ use VirtualProductGereso\VirtualProductGereso;
  */
 class BackController extends BaseAdminController
 {
-    // protected $currentRouter = 'router.customdelivery';
+    protected $currentRouter = 'router.customdelivery';
 
-    public function updateAction()
+    protected $useFallbackTemplate = true;
+
+    /**
+     * Save slice
+     *
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     */
+    public function saveAction()
     {
-        $response = $this->checkAuth([AdminResources::MODULE], ['virtualproductgereso'], AccessManager::UPDATE);
+        $response = $this->checkAuth([AdminResources::MODULE], ['customdelivery'], AccessManager::UPDATE);
+
         if (null !== $response) {
             return $response;
         }
 
         $this->checkXmlHttpRequest();
 
-        $modificationForm = $this->createForm('vpg.update.form', 'form');
+        $responseData = [
+            "success" => false,
+            "message" => '',
+            "slice" => null
+        ];
+
+        $messages = [];
+        $response = null;
+        $config = CustomDelivery::getConfig();
 
         try {
-            // Check the form against constraints violations
-            $form = $this->validateForm($modificationForm, "POST");
-            $data = $form->getData();
+            $requestData = $this->getRequest()->request;
 
-            $virtualOrderProduct = VirtualOrderProductQuery::create()->findPk($data['update_id']);
-            $virtualOrderProduct
-                ->setDownload($data['update_download'])
-                ->setExpire(
-                    \DateTime::createFromFormat('Y-m-d', $data['update_expire'])
-                )
-                ->save()
-            ;
+            if (0 !== $id = intval($requestData->get('id', 0))) {
+                $slice = CustomDeliverySliceQuery::create()->findPk($id);
+            } else {
+                $slice = new CustomDeliverySlice();
+            }
 
-            return $this->generateSuccessRedirect($modificationForm);
-        } catch (FormValidationException $ex) {
-            // Form cannot be validated
-            $error_msg = $this->createStandardFormValidationErrorMessage($ex);
-        } catch (\Exception $ex) {
-            // Any other error
-            $error_msg = $ex->getMessage();
+            if (0 !== $areaId = intval($requestData->get('area', 0))) {
+                $slice->setAreaId($areaId);
+            } else {
+                $messages[] = $this->getTranslator()->trans(
+                    'The area is not valid',
+                    [],
+                    CustomDelivery::getModuleCode()
+                );
+            }
+
+            if ($config['method'] != CustomDelivery::METHOD_WEIGHT) {
+                $priceMax = floatval($requestData->get('priceMax', 0));
+                if (0 != $priceMax) {
+                    $slice->setPriceMax($priceMax);
+                } else {
+                    $messages[] = $this->getTranslator()->trans(
+                        'The price max value is not valid',
+                        [],
+                        CustomDelivery::getModuleCode()
+                    );
+                }
+            }
+
+            if ($config['method'] != CustomDelivery::METHOD_PRICE) {
+                $weightMax = floatval($requestData->get('weightMax', 0));
+                if (0 != $weightMax) {
+                    $slice->setWeightMax($weightMax);
+                } else {
+                    $messages[] = $this->getTranslator()->trans(
+                        'The weight max value is not valid',
+                        [],
+                        CustomDelivery::getModuleCode()
+                    );
+                }
+            }
+
+            $price = floatval($requestData->get('price', 0));
+            $slice->setPrice($price);
+
+            if (0 === count($messages)) {
+                $slice->save();
+                $messages[] = $this->getTranslator()->trans(
+                    'Your slice has been saved',
+                    [],
+                    CustomDelivery::getModuleCode()
+                );
+
+                $responseData['success'] = true;
+                $responseData['slice'] = $slice->toArray(TableMap::TYPE_STUDLYPHPNAME);
+            }
+
+        } catch (\Exception $e) {
+            $message[] = $e->getMessage();
         }
 
-        if (false !== $error_msg) {
-            $this->setupFormErrorContext(
-                $this->getTranslator()->trans("Virtual product offer", [], VirtualProductGereso::getModuleCode()),
-                $error_msg,
-                $modificationForm,
-                $ex
-            );
+        $responseData['message'] = $messages;
 
-            // At this point, the form has error, and should be redisplayed.
-            return $this->listAction();
+        return $this->jsonResponse(json_encode($responseData));
+    }
+
+    /**
+     * Save slice
+     *
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     */
+    public function deleteAction()
+    {
+        $response = $this->checkAuth([AdminResources::MODULE], ['customdelivery'], AccessManager::DELETE);
+
+        if (null !== $response) {
+            return $response;
         }
 
-        return $this->generateRedirectFromRoute('admin.vpg.list');
+        $this->checkXmlHttpRequest();
+
+        $responseData = [
+            "success" => false,
+            "message" => '',
+            "slice" => null
+        ];
+
+        $messages = [];
+        $response = null;
+        $config = CustomDelivery::getConfig();
+
+        try {
+            $requestData = $this->getRequest()->request;
+
+            if (0 !== $id = intval($requestData->get('id', 0))) {
+                $slice = CustomDeliverySliceQuery::create()->findPk($id);
+                $slice->delete();
+                $responseData['success'] = true;
+            } else {
+                $responseData['message'] = $this->getTranslator()->trans(
+                    'The slice has not been deleted',
+                    [],
+                    CustomDelivery::getModuleCode()
+                );
+            }
+        } catch (\Exception $e) {
+            $responseData['message'] = $e->getMessage();
+        }
+
+        return $this->jsonResponse(json_encode($responseData));
     }
 
     /**
@@ -103,7 +190,7 @@ class BackController extends BaseAdminController
             return $response;
         }
 
-        $form = new ConfigurationForm($this->getRequest());
+        $form = $this->createForm('customdelivery.configuration.form', 'form');
         $message = "";
 
         $response = null;
@@ -134,18 +221,12 @@ class BackController extends BaseAdminController
 
             return $this->render(
                 "module-configure",
-                ["module_code" => VirtualProductGereso::getModuleCode()]
+                ["module_code" => CustomDelivery::getModuleCode()]
             );
         }
 
         return RedirectResponse::create(
-            URL::getInstance()->absoluteUrl("/admin/module/" . VirtualProductGereso::getModuleCode())
+            URL::getInstance()->absoluteUrl("/admin/module/" . CustomDelivery::getModuleCode())
         );
-    }
-
-    public function saveRelationsAction()
-    {
-        $message = '';
-        return $this->jsonResponse(json_encode($message));
     }
 }

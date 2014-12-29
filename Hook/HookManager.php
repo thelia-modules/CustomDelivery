@@ -45,15 +45,23 @@ class HookManager extends BaseHook
     public function onModuleConfiguration(HookRenderEvent $event)
     {
         $moduleId = $this->getModule()->getModuleId();
-        $method = 0;
         $config = CustomDelivery::getConfig();
 
         $event->add(
-            $this->render("configuration.html"),
-            [
-                'module_id' => $moduleId,
-                'method' => $config['method']
-            ]
+            $this->render(
+                "configuration.html",
+                [
+                    'module_id' => $moduleId,
+                    'method' => $config['method']
+                ]
+            )
+        );
+    }
+
+    public function onModuleConfigJs(HookRenderEvent $event)
+    {
+        $event->add(
+            $this->render("module-config-js.html")
         );
     }
 }

@@ -14,9 +14,12 @@
 namespace CustomDelivery\Form;
 
 use CustomDelivery\CustomDelivery;
+use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\ExecutionContextInterface;
 use Thelia\Form\BaseForm;
+use Thelia\Model\Base\TaxRuleQuery;
 use VirtualProductGereso\VirtualProductGereso;
 
 /**
@@ -68,6 +71,7 @@ class ConfigurationForm extends BaseForm
                         CustomDelivery::METHOD_PRICE => $this->trans("Price"),
                         CustomDelivery::METHOD_WEIGHT => $this->trans("Weight"),
                     ],
+                    'data' => $config['method'],
                     'label' => $this->trans("Method"),
                     'label_attr' => [
                         'for' => "method",
@@ -81,6 +85,13 @@ class ConfigurationForm extends BaseForm
                 "tax",
                 "tax_rule_id",
                 [
+                    "constraints" => [
+                        new Callback([
+                            "methods" => [
+                                [$this, "checkTaxRuleId"]
+                            ]
+                        ])
+                    ],
                     'required' => false,
                     'data' => $config['tax'],
                     'label' => $this->trans("Tax rule"),
@@ -93,6 +104,22 @@ class ConfigurationForm extends BaseForm
                 ]
             )
         ;
+    }
+
+    public function checkTaxRuleId($value, ExecutionContextInterface $context)
+    {
+        if (0 !== intval($value)) {
+            if (null === TaxRuleQuery::create()->findPk($value)) {
+                $context->addViolation(
+                    $this->trans(
+                        "The Tax Rule id '%id' doesn't exist",
+                        [
+                            "%id" => $value,
+                        ]
+                    )
+                );
+            }
+        }
     }
 
     /**

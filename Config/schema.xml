@@ -9,15 +9,13 @@
 
         <column name="area_id" type="INTEGER" required="true" />
 
-        <column defaultValue="0" name="price_max" type="INTEGER" />
+        <column defaultValue="0" name="price_max" type="FLOAT" />
         <column defaultValue="0" name="weight_max" type="FLOAT" />
         <column defaultValue="0" name="price" type="FLOAT" />
 
         <foreign-key foreignTable="area" name="fk_area_id" onDelete="CASCADE" onUpdate="RESTRICT">
             <reference foreign="id" local="area_id" />
         </foreign-key>
-
-        <behavior name="timestampable" />
 
     </table>
 

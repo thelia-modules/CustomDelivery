@@ -18,7 +18,19 @@
 
                 {render_form_field form=$form field="url"}
                 {render_form_field form=$form field="method"}
-                {render_form_field form=$form field=""}
+
+                {form_field form=$form field="tax"}
+                    <div class="form-group {if $error}has-error{/if}">
+                        <label for="{$label_attr.for}" class="control-label">{$label} : </label>
+
+                        <select id="{$label_attr.for}" name="{$name}" class="form-control" data-toggle="selectpicker">
+                            <option value="" {if $value == 0}selected="selected"{/if}>{intl l="No taxes" d="customdelivery.bo.default"}</option>
+                            {loop name='tax-rule-admin' type="tax-rule" backend_context="on"}
+                            <option value="{$ID}" {if $value == $ID}selected="selected"{/if}>{$ID}: {$TITLE}</option>
+                            {/loop}
+                        </select>
+                    </div>
+                {/form_field}
 
                 <button type="submit" id="vpg-save" name="customdelivery_save" value="save" class="form-submit-button btn btn-sm btn-default" title="{intl d='customdelivery.bo.default' l='Save'}">{intl d='virtualproductgereso.ai' l='Save'}</button>
 
@@ -33,6 +45,12 @@
 </div>
 
 <!-- slices -->
+{* default currency *}
+{loop type="currency" name="default_currency" default_only="1"}
+    {$currencySymbol=$SYMBOL}
+{/loop}
+
+
 <div class="general-block-decorator">
     <div class="row">
 
@@ -40,47 +58,50 @@
             {intl d='customdelivery.bo.default' l='Slices.'}
         </div>
 
-        <div class="form-container">
+        <div id="slices" class="form-container">
 
-            {loop type="area" module_id=$module_id backend_context=true}
+            {loop type="area" name="area" module_id=$module_id backend_context=true}
                 {$area_id=$ID}
-                <div class="col-md-12">
-                    {$NAME}
-                </div>
                 <div class="col-md-12">
                     <div class="table-responsive">
                         <table class="table table-striped table-condensed table-left-aligned">
                             <caption class="clearfix">
                                 {intl d='customdelivery.bo.default' l="Area : "}{$NAME}
+                                method : {$method}
                             </caption>
                             <thead>
                                 <tr>
-                                    {if $method != 2}<th class="col-md-3">{intl d='customdelivery.bo.default' l="Price up to ... "}</th>{/if}
+                                    {if $method != 2}<th class="col-md-3">{intl d='customdelivery.bo.default' l="Price up to ... %symbol" symbol=$currencySymbol}</th>{/if}
                                     {if $method != 1}<th class="col-md-3">{intl d='customdelivery.bo.default' l="Weight up to ... (kg)"}</th>{/if}
                                     <th class="col-md-5">{intl d='customdelivery.bo.default' l="Price (€)"}</th>
                                     <th class="col-md-1">{intl d='customdelivery.bo.default' l="Actions"}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {loop type="custom-delivery-slice" name="custom-delivery-slice"}
+                                {loop type="custom-delivery-slice" name="custom-delivery-slice" area_id=$area_id order="weight_max,price_max" }
                                     <tr class="js-slice" data-area="{$area_id}" data-id="{$ID}">
                                         {if $method != 2}
                                         <th class="col-md-3">
-                                            <input type="text" class="js-slice-price-max" value="{$PRICE_MAX}" />
+                                            <input type="text" data-field="price-max" class="js-slice-price-max" value="{$PRICE_MAX}" data-old="{$PRICE_MAX}" />
                                         </th>
                                         {/if}
                                         {if $method != 1}
                                         <th class="col-md-3">
-                                            <input type="text" class="js-slice-weight-max" value="{$PRICE_WEIGHT}" />
+                                            <input type="text" data-field="weight-max" class="js-slice-weight-max" value="{$WEIGHT_MAX}" data-old="{$WEIGHT_MAX}" />
                                         </th>
                                         {/if}
                                         <th class="col-md-5">
-                                            <input type="text" class="js-slice-price" value="{$PRICE}" />
+                                            <input type="text" data-field="price" class="js-slice-price" value="{$PRICE}" data-old="{$PRICE}" />
                                         </th>
                                         <th class="col-md-1">
                                             <div class="btn-group">
+                                                {loop type="auth" name="can_change" role="ADMIN" module="customdelivery" access="UPDATE"}
+                                                <a class="btn btn-default btn-xs js-slice-save" title="{intl d='customdelivery.bo.default' l='Save this price slice'}">
+                                                    <span class="glyphicon glyphicon-floppy-disk"></span>
+                                                </a>
+                                                {/loop}
                                                 {loop type="auth" name="can_change" role="ADMIN" module="customdelivery" access="DELETE"}
-                                                <a class="btn btn-default btn-xs" title="{intl d='customdelivery.bo.default' l='Delete this price slice'}" href="#price_slice_delete_dialog_{$ID}_{$MAX_WEIGHT|replace:'.':'-'}" data-toggle="modal">
+                                                <a class="btn btn-default btn-xs js-slice-delete" title="{intl d='customdelivery.bo.default' l='Delete this price slice'}" data-id="{$ID}">
                                                     <span class="glyphicon glyphicon-trash"></span>
                                                 </a>
                                                 {/loop}
@@ -88,28 +109,30 @@
                                         </th>
                                     </tr>
                                 {/loop}
+
+                                {* New slice *}
+                                {loop type="auth" name="can_change" role="ADMIN" module="customdelivery" access="CREATE"}
                                 <tr class="js-slice-new" data-area="{$area_id}" data-id="0">
                                     {if $method != 2}
                                         <th class="col-md-3">
-                                            <input type="text" class="js-slice-price-max" value="" />
+                                            <input type="text" data-field="price-max" class="js-slice-price-max" value="" />
                                         </th>
                                     {/if}
                                     {if $method != 1}
                                         <th class="col-md-3">
-                                            <input type="text" class="js-slice-weight-max" value="" />
+                                            <input type="text" data-field="weight-max" class="js-slice-weight-max" value="" />
                                         </th>
                                     {/if}
                                     <th class="col-md-5">
-                                        <input type="text" class="js-slice-price" value="" />
+                                        <input type="text" data-field="price" class="js-slice-price" value="" />
                                     </th>
                                     <th class="col-md-1">
-                                        {loop type="auth" name="can_change" role="ADMIN" module="customdelivery" access="CREATE"}
-                                        <a class="btn btn-default btn-xs" title="{intl d='customdelivery.bo.default' l='Add this price slice'}" >
+                                        <a class="btn btn-default btn-xs js-slice-add" title="{intl d='customdelivery.bo.default' l='Add this price slice'}" >
                                             <span class="glyphicon glyphicon-plus"></span>
                                         </a>
-                                        {/loop}
                                     </th>
                                 </tr>
+                                {/loop}
                             </tbody>
                         </table>
                     </div>
@@ -121,3 +144,36 @@
 
     </div>
 </div>
+
+{* JS Templates *}
+<script id="tpl-slice" type="text/html">
+    <tr class="js-slice" data-area="<%=areaId %>" data-id="<%=id %>">
+        {if $method != 2}
+        <th class="col-md-3">
+            <input type="text" data-field="price-max" class="js-slice-price-max" value="<%=priceMax %>" data-old="<%=priceMax %>" />
+        </th>
+        {/if}
+        {if $method != 1}
+        <th class="col-md-3">
+            <input type="text" data-field="weight-max" class="js-slice-weight-max" value="<%=weightMax %>" data-old="<%=weightMax %>" />
+        </th>
+        {/if}
+        <th class="col-md-5">
+            <input type="text" data-field="price" class="js-slice-price" value="<%=price %>" data-old="<%=price %>" />
+        </th>
+        <th class="col-md-1">
+            <div class="btn-group">
+                {loop type="auth" name="can_change" role="ADMIN" module="customdelivery" access="UPDATE"}
+                <a class="btn btn-default btn-xs js-slice-save" title="{intl d='customdelivery.bo.default' l='Save this price slice'}">
+                    <span class="glyphicon glyphicon-floppy-disk"></span>
+                </a>
+                {/loop}
+                {loop type="auth" name="can_change" role="ADMIN" module="customdelivery" access="DELETE"}
+                <a class="btn btn-default btn-xs js-slice-delete" title="{intl d='customdelivery.bo.default' l='Delete this price slice'}" data-id="<%=id %>">
+                    <span class="glyphicon glyphicon-trash"></span>
+                </a>
+                {/loop}
+            </div>
+        </th>
+    </tr>
+</script>

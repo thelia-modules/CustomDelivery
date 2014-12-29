@@ -13,11 +13,9 @@ CREATE TABLE `custom_delivery_slice`
 (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `area_id` INTEGER NOT NULL,
-    `price_max` INTEGER DEFAULT 0,
+    `price_max` FLOAT DEFAULT 0,
     `weight_max` FLOAT DEFAULT 0,
     `price` FLOAT DEFAULT 0,
-    `created_at` DATETIME,
-    `updated_at` DATETIME,
     PRIMARY KEY (`id`),
     INDEX `FI_area_id` (`area_id`),
     CONSTRAINT `fk_area_id`

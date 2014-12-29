@@ -10,6 +10,7 @@
 
     <forms>
         <form name="customdelivery.configuration.form" class="CustomDelivery\Form\ConfigurationForm" />
+        <form name="customdelivery.slice.form" class="CustomDelivery\Form\SliceForm" />
     </forms>
 
     <services>
@@ -29,6 +30,7 @@
 
             <!-- Back -->
             <tag name="hook.event_listener" event="module.configuration" type="back" />
+            <tag name="hook.event_listener" event="module.config-js" type="back" />
         </hook>
     </hooks>
 

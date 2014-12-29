@@ -16,16 +16,12 @@ namespace CustomDelivery\Loop;
 use CustomDelivery\Model\Base\CustomDeliverySliceQuery;
 use CustomDelivery\Model\CustomDeliverySlice;
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Join;
-use Slide\Model\Map\SlideItemTableMap;
-use Slide\Model\Map\SlideRelTableMap;
 use Thelia\Core\Template\Element\BaseLoop;
 use Thelia\Core\Template\Element\LoopResult;
 use Thelia\Core\Template\Element\LoopResultRow;
 use Thelia\Core\Template\Element\PropelSearchLoopInterface;
 use Thelia\Core\Template\Loop\Argument\Argument;
 use Thelia\Core\Template\Loop\Argument\ArgumentCollection;
-use Thelia\Model\Exception\InvalidArgumentException;
 use Thelia\Type\EnumListType;
 use Thelia\Type\TypeCollection;
 
@@ -34,7 +30,7 @@ use Thelia\Type\TypeCollection;
  * @package CustomDelivery\Loop
  * @author Julien Chanséaume <jchanseaume@openstudio.fr>
  */
-class CustomDeliverySlideLoop extends BaseLoop implements PropelSearchLoopInterface
+class CustomDeliverySliceLoop extends BaseLoop implements PropelSearchLoopInterface
 {
     protected $timestampable = false;
 
@@ -57,8 +53,7 @@ class CustomDeliverySlideLoop extends BaseLoop implements PropelSearchLoopInterf
                 ->set("AREA_ID", $slice->getAreaId())
                 ->set("PRICE_MAX", $slice->getPriceMax())
                 ->set("WEIGHT_MAX", $slice->getWeightMax())
-                ->set("PRICE", $slice->getPrice())
-            ;
+                ->set("PRICE", $slice->getPrice());
 
             $this->addOutputFields($loopResultRow, $slice);
 

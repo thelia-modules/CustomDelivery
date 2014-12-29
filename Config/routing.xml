@@ -4,28 +4,16 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://symfony.com/schema/routing http://symfony.com/schema/routing/routing-1.0.xsd">
 
-    <!--
-
-    if a /admin/module/customdelivery/ route is provided, a "Configuration" button will be displayed
-    for the module in the module list. Clicking this button will invoke this route.
-
-    <route id="my_route_id" path="/admin/module/customdelivery">
-        <default key="_controller">CustomDelivery\Full\Class\Name\Of\YourConfigurationController::methodName</default>
+    <route id="customdelivery.admin.update" path="/admin/module/customdelivery/save" methods="post">
+        <default key="_controller">CustomDelivery\Controller\BackController::saveAction</default>
     </route>
 
-    <route id="my_route_id" path="/admin/module/customdelivery/route-name">
-        <default key="_controller">CustomDelivery\Full\Class\Name\Of\YourAdminController::methodName</default>
+    <route id="customdelivery.admin.delete" path="/admin/module/customdelivery/delete" methods="post">
+        <default key="_controller">CustomDelivery\Controller\BackController::deleteAction</default>
     </route>
 
-    <route id="my_route_id" path="/my/route/name">
-        <default key="_controller">CustomDelivery\Full\Class\Name\Of\YourOtherController::methodName</default>
+    <route id="customdelivery.admin.configuration" path="/admin/module/customdelivery/configuration" methods="post">
+        <default key="_controller">CustomDelivery\Controller\BackController::saveConfigurationAction</default>
     </route>
-
-    ...add as many routes as required.
-
-    <route>
-    ...
-    </route>
-    -->
 
 </routes>

@@ -17,14 +17,17 @@ use CustomDelivery\Model\CustomDeliverySliceQuery;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Thelia\Install\Database;
+use Thelia\Model\Base\TaxRuleQuery;
 use Thelia\Model\Cart;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\Country;
-use Thelia\Model\Message;
-use Thelia\Model\MessageQuery;
+use Thelia\Model\OrderPostage;
+use Thelia\Model\TaxRule;
 use Thelia\Module\BaseModule;
 use Thelia\Module\DeliveryModuleInterface;
 use Thelia\Module\Exception\DeliveryException;
+use Thelia\TaxEngine\Calculator;
+use Thelia\Tools\I18n;
 
 class CustomDelivery extends BaseModule implements DeliveryModuleInterface
 {
@@ -74,7 +77,6 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         if (null === ConfigQuery::read(self::CONFIG_TAX_RULE_ID, null)) {
             ConfigQuery::write(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID);
         }
-
         /*
         // delete existing message
         $message = MessageQuery::create()
@@ -96,23 +98,6 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         */
     }
 
-    public static function getConfig()
-    {
-        $config = [
-            'url' => (
-                ConfigQuery::read(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL)
-            ),
-            'method' => (
-                intval(ConfigQuery::read(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD))
-            ),
-            'tax' => (
-                intval(ConfigQuery::read(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID))
-            )
-        ];
-
-        return $config;
-    }
-
     /**
      * This method is called by the Delivery  loop, to check if the current module has to be displayed to the customer.
      * Override it to implements your delivery rules/
@@ -127,11 +112,11 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
     public function isValidDelivery(Country $country)
     {
         // Retrieve the cart
-        $areaId = $country->getAreaId();
+        //$areaId = $country->getAreaId();
         $cart = $this->getRequest()->getSession()->getSessionCart();
 
         /** @var CustomDeliverySlice $slice */
-        $slice = $this->getSlicePostage($cart, $areaId);
+        $slice = $this->getSlicePostage($cart, $country);
 
         return null !== $slice;
     }
@@ -139,20 +124,95 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
     /**
      * @param Cart $cart
      * @param $areaId
-     * @return CustomDeliverySlice|null
+     * @return |null
      */
-    protected function getSlicePostage(Cart $cart, $areaId)
+    protected function getSlicePostage(Cart $cart, Country $country)
     {
-        $slice = CustomDeliverySliceQuery::create()
-            ->filterByWeightMax($cart->getWeight(), Criteria::LESS_THAN)
-            ->orderByWeightMax(Criteria::DESC)
-            ->useAreaDeliveryModuleQuery()
-                ->filterByAreaId($areaId)
-            ->endUse()
-            ->findOne()
-        ;
+        $config = self::getConfig();
 
-        return $slice;
+        $currency = $cart->getCurrency();
+
+        $areaId = $country->getAreaId();
+
+        $query = CustomDeliverySliceQuery::create()
+            ->filterByAreaId($areaId);
+
+        if ($config['method'] != CustomDelivery::METHOD_PRICE) {
+            $query->filterByWeightMax($cart->getWeight(), Criteria::GREATER_THAN);
+            $query->orderByWeightMax(Criteria::ASC);
+        }
+
+        if ($config['method'] != CustomDelivery::METHOD_WEIGHT) {
+            $total = $cart->getTotalAmount();
+            // convert amount to the default currency
+            if (0 == $currency->getByDefault()) {
+                $total = $total / $currency->getRate();
+            }
+
+            $query->filterByPriceMax($total, Criteria::GREATER_THAN);
+            $query->orderByPriceMax(Criteria::ASC);
+        }
+
+        $slice = $query->findOne();
+        $postage = null;
+
+        if (null !== $slice) {
+            $postage = new OrderPostage();
+
+            if (0 == $currency->getByDefault()) {
+                $price = $slice->getPrice() * $currency->getRate();
+            } else {
+                $price = $slice->getPrice();
+            }
+            $price = round($price, 2);
+
+            $postage->setAmount($price);
+            $postage->setAmountTax(0);
+
+            // taxed amount
+            if (0 !== $config['tax']) {
+                $taxRuleI18N = I18n::forceI18nRetrieving(
+                    $this->getRequest()->getSession()->getLang()->getLocale(),
+                    'TaxRule',
+                    $config['tax']
+                );
+                $taxRule = TaxRuleQuery::create()->findPk($config['tax']);
+                if (null !== $taxRule) {
+                    $taxCalculator = new Calculator();
+                    $taxCalculator->loadTaxRuleWithoutProduct($taxRule, $country);
+
+                    $postage->setAmount(
+                        round($taxCalculator->getTaxedPrice($price), 2)
+                    );
+
+                    $postage->setAmountTax($postage->getAmount() - $price);
+
+                    $postage->setTaxRuleTitle($taxRuleI18N->getTitle());
+                }
+            }
+
+
+
+        }
+
+        return $postage;
+    }
+
+    public static function getConfig()
+    {
+        $config = [
+            'url' => (
+            ConfigQuery::read(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL)
+            ),
+            'method' => (
+            intval(ConfigQuery::read(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD))
+            ),
+            'tax' => (
+            intval(ConfigQuery::read(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID))
+            )
+        ];
+
+        return $config;
     }
 
     /**
@@ -160,7 +220,7 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
      *
      * @param Country $country the country to deliver to.
      *
-     * @return float             the delivery price
+     * @return OrderPostage             the delivery price
      * @throws DeliveryException if the postage price cannot be calculated.
      */
     public function getPostage(Country $country)
@@ -169,13 +229,13 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         $cart = $this->getRequest()->getSession()->getSessionCart();
 
         /** @var CustomDeliverySlice $slice */
-        $slice = $this->getSlicePostage($cart, $areaId);
+        $postage = $this->getSlicePostage($cart, $country);
 
-        if (null === $slice) {
+        if (null === $postage) {
             throw new DeliveryException();
         }
 
-        return $slice->getPrice();
+        return $postage;
     }
 
     /**

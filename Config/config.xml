@@ -15,8 +15,8 @@
 
     <services>
         <service id="customdelivery.events" class="CustomDelivery\EventListeners\CustomDeliveryEvents" scope="request">
-            <argument type="service" id="request" />
-            <argument type="service" id="thelia.translator"/>
+            <argument type="service" id="thelia.parser" />
+            <argument type="service" id="mailer"/>
 
             <tag name="kernel.event_subscriber"/>
         </service>

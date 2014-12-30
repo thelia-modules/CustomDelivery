@@ -16,11 +16,15 @@ use CustomDelivery\Model\CustomDeliverySlice;
 use CustomDelivery\Model\CustomDeliverySliceQuery;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Thelia\Core\Translation\Translator;
 use Thelia\Install\Database;
 use Thelia\Model\Base\TaxRuleQuery;
 use Thelia\Model\Cart;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\Country;
+use Thelia\Model\LangQuery;
+use Thelia\Model\Message;
+use Thelia\Model\MessageQuery;
 use Thelia\Model\OrderPostage;
 use Thelia\Model\TaxRule;
 use Thelia\Module\BaseModule;
@@ -43,6 +47,9 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
     const METHOD_PRICE_WEIGHT = 0;
     const METHOD_PRICE = 1;
     const METHOD_WEIGHT = 2;
+
+    /** @var Translator */
+    protected $translator;
 
     public function preActivation(ConnectionInterface $con = null)
     {
@@ -77,10 +84,9 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         if (null === ConfigQuery::read(self::CONFIG_TAX_RULE_ID, null)) {
             ConfigQuery::write(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID);
         }
-        /*
-        // delete existing message
+
         $message = MessageQuery::create()
-            ->filterByName('virtual_product_offer')
+            ->filterByName('mail_custom_delivery')
             ->findOne($con);
 
         if (null !== $message) {
@@ -88,14 +94,36 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         }
 
         // create new message
-        $message = new Message();
-        $message
-            ->setName('virtual_product_offer')
-            ->setSecured(0)
-        ;
+        if (null === MessageQuery::create()->findOneByName('mail_custom_delivery')) {
 
-        $message->save();
-        */
+            $message = new Message();
+            $message
+                ->setName('mail_custom_delivery')
+                ->setHtmlTemplateFileName('custom-delivery-shipping.html')
+                ->setHtmlLayoutFileName('')
+                ->setTextTemplateFileName('custom-delivery-shipping.txt')
+                ->setTextLayoutFileName('')
+                ->setSecured(0)
+            ;
+
+            $languages = LangQuery::create()->find();
+
+            foreach ($languages as $language) {
+                $locale = $language->getLocale();
+
+                $message->setLocale($locale);
+
+                $message->setTitle(
+                    $this->trans('Custom delivery shipping message', [], $locale)
+                );
+                $message->setSubject(
+                    $this->trans('Your order {$order_ref} has been shipped', [], $locale)
+                );
+            }
+
+            $message->save();
+        }
+
     }
 
     /**
@@ -236,6 +264,15 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         }
 
         return $postage;
+    }
+
+    protected function trans($id, array $parameters = [], $locale = null)
+    {
+        if (null === $this->translator) {
+            $this->translator = Translator::getInstance();
+        }
+
+        return $this->translator->trans($id, $parameters, CustomDelivery::getModuleCode(), $locale);
     }
 
     /**

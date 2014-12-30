@@ -45,6 +45,10 @@ class CustomDeliveryEvents implements EventSubscriberInterface
         $order = $event->getOrder();
         $customDelivery = new CustomDelivery();
 
+        $sent = $order->isSent();
+        $moduleId = $order->getDeliveryModuleId();
+        $moduleId2 = $customDelivery->getModuleModel()->getId();
+
         if ($order->isSent() && $order->getDeliveryModuleId() == $customDelivery->getModuleModel()->getId()) {
             $contact_email = ConfigQuery::getStoreEmail();
 
@@ -55,7 +59,7 @@ class CustomDeliveryEvents implements EventSubscriberInterface
                     ->findOne();
 
                 if (false === $message) {
-                    throw new \Exception("Failed to load message 'order_confirmation'.");
+                    throw new \Exception("Failed to load message 'mail_custom_delivery'.");
                 }
 
                 $order = $event->getOrder();
@@ -65,8 +69,19 @@ class CustomDeliveryEvents implements EventSubscriberInterface
                 $this->parser->assign('order_ref', $order->getRef());
                 $this->parser->assign('order_date', $order->getCreatedAt());
                 $this->parser->assign('update_date', $order->getUpdatedAt());
-                $this->parser->assign('package', $order->getDeliveryRef());
 
+                $package = $order->getDeliveryRef();
+                $trackingUrl = null;
+
+                if (!empty($package)) {
+                    $config = CustomDelivery::getConfig();
+                    $trackingUrl = $config['url'];
+                    if (!empty($trackingUrl)) {
+                        $trackingUrl = str_replace('%ID%', $package, $trackingUrl);
+                    }
+                }
+                $this->parser->assign('package', $package);
+                $this->parser->assign('tracking_url', $trackingUrl);
 
                 $message
                     ->setLocale($order->getLang()->getLocale());
@@ -81,7 +96,10 @@ class CustomDeliveryEvents implements EventSubscriberInterface
 
                 $this->mailer->send($instance);
 
-                Tlog::getInstance()->debug("Colissimo shipping message sent to customer " . $customer->getEmail());
+                Tlog::getInstance()->debug(
+                    "Custom Delivery shipping message sent to customer " . $customer->getEmail()
+                );
+
             } else {
                 $customer = $order->getCustomer();
                 Tlog::getInstance()->debug(

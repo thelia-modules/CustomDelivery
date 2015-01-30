@@ -77,7 +77,7 @@ class BackController extends BaseAdminController
                 $messages[] = $this->getTranslator()->trans(
                     'The area is not valid',
                     [],
-                    CustomDelivery::getModuleCode()
+                    CustomDelivery::MESSAGE_DOMAIN
                 );
             }
 
@@ -89,7 +89,7 @@ class BackController extends BaseAdminController
                     $messages[] = $this->getTranslator()->trans(
                         'The price max value is not valid',
                         [],
-                        CustomDelivery::getModuleCode()
+                        CustomDelivery::MESSAGE_DOMAIN
                     );
                 }
             }
@@ -102,7 +102,7 @@ class BackController extends BaseAdminController
                     $messages[] = $this->getTranslator()->trans(
                         'The weight max value is not valid',
                         [],
-                        CustomDelivery::getModuleCode()
+                        CustomDelivery::MESSAGE_DOMAIN
                     );
                 }
             }
@@ -115,7 +115,7 @@ class BackController extends BaseAdminController
                 $messages[] = $this->getTranslator()->trans(
                     'Your slice has been saved',
                     [],
-                    CustomDelivery::getModuleCode()
+                    CustomDelivery::MESSAGE_DOMAIN
                 );
 
                 $responseData['success'] = true;
@@ -167,7 +167,7 @@ class BackController extends BaseAdminController
                 $responseData['message'] = $this->getTranslator()->trans(
                     'The slice has not been deleted',
                     [],
-                    CustomDelivery::getModuleCode()
+                    CustomDelivery::MESSAGE_DOMAIN
                 );
             }
         } catch (\Exception $e) {

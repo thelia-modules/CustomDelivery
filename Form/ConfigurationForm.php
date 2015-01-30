@@ -31,7 +31,7 @@ class ConfigurationForm extends BaseForm
 {
     protected function trans($id, array $parameters = [])
     {
-        return $this->translator->trans($id, $parameters, CustomDelivery::getModuleCode());
+        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN);
     }
 
     protected function buildForm()

@@ -36,6 +36,8 @@ use Thelia\Tools\I18n;
 class CustomDelivery extends BaseModule implements DeliveryModuleInterface
 {
 
+    const MESSAGE_DOMAIN = "customdelivery";
+
     const CONFIG_TRACKING_URL = 'custom_delivery_tracking_url';
     const CONFIG_PICKING_METHOD = 'custom_delivery_picking_method';
     const CONFIG_TAX_RULE_ID = 'custom_delivery_taxe_rule';
@@ -272,7 +274,7 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
             $this->translator = Translator::getInstance();
         }
 
-        return $this->translator->trans($id, $parameters, CustomDelivery::getModuleCode(), $locale);
+        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN, $locale);
     }
 
     /**

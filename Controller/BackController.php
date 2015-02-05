@@ -44,7 +44,7 @@ class BackController extends BaseAdminController
      */
     public function saveAction()
     {
-        $response = $this->checkAuth([AdminResources::MODULE], ['customdelivery'], AccessManager::UPDATE);
+        $response = $this->checkAuth([], ['customdelivery'], AccessManager::UPDATE);
 
         if (null !== $response) {
             return $response;
@@ -138,7 +138,7 @@ class BackController extends BaseAdminController
      */
     public function deleteAction()
     {
-        $response = $this->checkAuth([AdminResources::MODULE], ['customdelivery'], AccessManager::DELETE);
+        $response = $this->checkAuth([], ['customdelivery'], AccessManager::DELETE);
 
         if (null !== $response) {
             return $response;

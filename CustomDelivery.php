@@ -87,6 +87,7 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
             ConfigQuery::write(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID);
         }
 
+        /*
         $message = MessageQuery::create()
             ->filterByName('mail_custom_delivery')
             ->findOne($con);
@@ -94,6 +95,7 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         if (null !== $message) {
             $message->delete($con);
         }
+        */
 
         // create new message
         if (null === MessageQuery::create()->findOneByName('mail_custom_delivery')) {

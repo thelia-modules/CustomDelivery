@@ -20,7 +20,6 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\ExecutionContextInterface;
 use Thelia\Form\BaseForm;
 use Thelia\Model\Base\TaxRuleQuery;
-use VirtualProductGereso\VirtualProductGereso;
 
 /**
  * Class ConfigurationForm

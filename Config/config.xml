@@ -24,10 +24,6 @@
 
     <hooks>
         <hook id="customdelivery.hook" class="CustomDelivery\Hook\HookManager" scope="request">
-            <!-- Front
-            <tag name="hook.event_listener" event="account-order.after-products" type="front"/>
-            -->
-
             <!-- Back -->
             <tag name="hook.event_listener" event="module.configuration" type="back" />
             <tag name="hook.event_listener" event="module.config-js" type="back" />

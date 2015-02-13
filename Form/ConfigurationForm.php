@@ -24,13 +24,32 @@ use Thelia\Model\Base\TaxRuleQuery;
 /**
  * Class ConfigurationForm
  * @package VirtualProductGereso\Form
- * @author Julien Chanséaume <jchanseaume@openstudio.fr>
+ * @author Julien Chanséaume <julien@thelia.net>
  */
 class ConfigurationForm extends BaseForm
 {
-    protected function trans($id, array $parameters = [])
+    public function checkTaxRuleId($value, ExecutionContextInterface $context)
     {
-        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN);
+        if (0 !== intval($value)) {
+            if (null === TaxRuleQuery::create()->findPk($value)) {
+                $context->addViolation(
+                    $this->trans(
+                        "The Tax Rule id '%id' doesn't exist",
+                        [
+                            "%id" => $value,
+                        ]
+                    )
+                );
+            }
+        }
+    }
+
+    /**
+     * @return string the name of you form. This name must be unique
+     */
+    public function getName()
+    {
+        return "customdelivery-configuration-form";
     }
 
     protected function buildForm()
@@ -101,31 +120,11 @@ class ConfigurationForm extends BaseForm
                         )
                     ],
                 ]
-            )
-        ;
+            );
     }
 
-    public function checkTaxRuleId($value, ExecutionContextInterface $context)
+    protected function trans($id, array $parameters = [])
     {
-        if (0 !== intval($value)) {
-            if (null === TaxRuleQuery::create()->findPk($value)) {
-                $context->addViolation(
-                    $this->trans(
-                        "The Tax Rule id '%id' doesn't exist",
-                        [
-                            "%id" => $value,
-                        ]
-                    )
-                );
-            }
-        }
-    }
-
-    /**
-     * @return string the name of you form. This name must be unique
-     */
-    public function getName()
-    {
-        return "customdelivery-configuration-form";
+        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN);
     }
 }

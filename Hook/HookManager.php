@@ -20,7 +20,7 @@ use Thelia\Core\Hook\BaseHook;
 /**
  * Class HookManager
  * @package CustomDelivery\Hook
- * @author Julien Chanséaume <jchanseaume@openstudio.fr>
+ * @author Julien Chanséaume <julien@thelia.net>
  */
 class HookManager extends BaseHook
 {

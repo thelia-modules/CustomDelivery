@@ -26,7 +26,7 @@ use Thelia\Model\MessageQuery;
 /**
  * Class CustomDeliveryEvents
  * @package CustomDelivery\EventListeners
- * @author Julien Chanséaume <jchanseaume@openstudio.fr>
+ * @author Julien Chanséaume <julien@thelia.net>
  */
 class CustomDeliveryEvents implements EventSubscriberInterface
 {
@@ -40,14 +40,37 @@ class CustomDeliveryEvents implements EventSubscriberInterface
         $this->mailer = $mailer;
     }
 
+    /**
+     * Returns an array of event names this subscriber wants to listen to.
+     *
+     * The array keys are event names and the value can be:
+     *
+     *  * The method name to call (priority defaults to 0)
+     *  * An array composed of the method name to call and the priority
+     *  * An array of arrays composed of the method names to call and respective
+     *    priorities, or 0 if unset
+     *
+     * For instance:
+     *
+     *  * array('eventName' => 'methodName')
+     *  * array('eventName' => array('methodName', $priority))
+     *  * array('eventName' => array(array('methodName1', $priority), array('methodName2'))
+     *
+     * @return array The event names to listen to
+     *
+     * @api
+     */
+    public static function getSubscribedEvents()
+    {
+        return [
+            TheliaEvents::ORDER_UPDATE_STATUS => ["updateStatus", 128]
+        ];
+    }
+
     public function updateStatus(OrderEvent $event)
     {
         $order = $event->getOrder();
         $customDelivery = new CustomDelivery();
-
-        $sent = $order->isSent();
-        $moduleId = $order->getDeliveryModuleId();
-        $moduleId2 = $customDelivery->getModuleModel()->getId();
 
         if ($order->isSent() && $order->getDeliveryModuleId() == $customDelivery->getModuleModel()->getId()) {
             $contact_email = ConfigQuery::getStoreEmail();
@@ -99,7 +122,6 @@ class CustomDeliveryEvents implements EventSubscriberInterface
                 Tlog::getInstance()->debug(
                     "Custom Delivery shipping message sent to customer " . $customer->getEmail()
                 );
-
             } else {
                 $customer = $order->getCustomer();
                 Tlog::getInstance()->debug(
@@ -108,32 +130,5 @@ class CustomDeliveryEvents implements EventSubscriberInterface
                 );
             }
         }
-    }
-
-    /**
-     * Returns an array of event names this subscriber wants to listen to.
-     *
-     * The array keys are event names and the value can be:
-     *
-     *  * The method name to call (priority defaults to 0)
-     *  * An array composed of the method name to call and the priority
-     *  * An array of arrays composed of the method names to call and respective
-     *    priorities, or 0 if unset
-     *
-     * For instance:
-     *
-     *  * array('eventName' => 'methodName')
-     *  * array('eventName' => array('methodName', $priority))
-     *  * array('eventName' => array(array('methodName1', $priority), array('methodName2'))
-     *
-     * @return array The event names to listen to
-     *
-     * @api
-     */
-    public static function getSubscribedEvents()
-    {
-        return [
-            TheliaEvents::ORDER_UPDATE_STATUS => ["updateStatus", 128]
-        ];
     }
 }

@@ -28,7 +28,7 @@ use Thelia\Type\TypeCollection;
 /**
  * Class CustomDeliverySlideLoop
  * @package CustomDelivery\Loop
- * @author Julien Chanséaume <jchanseaume@openstudio.fr>
+ * @author Julien Chanséaume <julien@thelia.net>
  */
 class CustomDeliverySliceLoop extends BaseLoop implements PropelSearchLoopInterface
 {
@@ -150,10 +150,14 @@ class CustomDeliverySliceLoop extends BaseLoop implements PropelSearchLoopInterf
                 new TypeCollection(
                     new EnumListType(
                         [
-                            'id', 'id_reverse',
-                            'weight_max', 'weight_max_reverse',
-                            'price_max', 'price_max_reverse',
-                            'price', 'price_reverse',
+                            'id',
+                            'id_reverse',
+                            'weight_max',
+                            'weight_max_reverse',
+                            'price_max',
+                            'price_max_reverse',
+                            'price',
+                            'price_reverse',
                         ]
                     )
                 ),

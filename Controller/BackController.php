@@ -14,7 +14,6 @@
 namespace CustomDelivery\Controller;
 
 use CustomDelivery\CustomDelivery;
-use CustomDelivery\Form\ConfigurationForm;
 use CustomDelivery\Model\CustomDeliverySlice;
 use CustomDelivery\Model\CustomDeliverySliceQuery;
 use Propel\Runtime\Map\TableMap;
@@ -22,14 +21,13 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
-use Thelia\Form\Exception\FormValidationException;
 use Thelia\Model\ConfigQuery;
 use Thelia\Tools\URL;
 
 /**
  * Class BackController
  * @package CustomDelivery\Controller
- * @author Julien Chanséaume <jchanseaume@openstudio.fr>
+ * @author Julien Chanséaume <julien@thelia.net>
  */
 class BackController extends BaseAdminController
 {
@@ -121,7 +119,6 @@ class BackController extends BaseAdminController
                 $responseData['success'] = true;
                 $responseData['slice'] = $slice->toArray(TableMap::TYPE_STUDLYPHPNAME);
             }
-
         } catch (\Exception $e) {
             $message[] = $e->getMessage();
         }
@@ -134,7 +131,7 @@ class BackController extends BaseAdminController
     /**
      * Save slice
      *
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return \Thelia\Core\HttpFoundation\Response
      */
     public function deleteAction()
     {
@@ -152,9 +149,7 @@ class BackController extends BaseAdminController
             "slice" => null
         ];
 
-        $messages = [];
         $response = null;
-        $config = CustomDelivery::getConfig();
 
         try {
             $requestData = $this->getRequest()->request;

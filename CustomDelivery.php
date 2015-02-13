@@ -26,7 +26,6 @@ use Thelia\Model\LangQuery;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
 use Thelia\Model\OrderPostage;
-use Thelia\Model\TaxRule;
 use Thelia\Module\BaseModule;
 use Thelia\Module\DeliveryModuleInterface;
 use Thelia\Module\Exception\DeliveryException;
@@ -87,16 +86,6 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
             ConfigQuery::write(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID);
         }
 
-        /*
-        $message = MessageQuery::create()
-            ->filterByName('mail_custom_delivery')
-            ->findOne($con);
-
-        if (null !== $message) {
-            $message->delete($con);
-        }
-        */
-
         // create new message
         if (null === MessageQuery::create()->findOneByName('mail_custom_delivery')) {
 
@@ -107,8 +96,7 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
                 ->setHtmlLayoutFileName('')
                 ->setTextTemplateFileName('custom-delivery-shipping.txt')
                 ->setTextLayoutFileName('')
-                ->setSecured(0)
-            ;
+                ->setSecured(0);
 
             $languages = LangQuery::create()->find();
 
@@ -127,7 +115,15 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
 
             $message->save();
         }
+    }
 
+    protected function trans($id, array $parameters = [], $locale = null)
+    {
+        if (null === $this->translator) {
+            $this->translator = Translator::getInstance();
+        }
+
+        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN, $locale);
     }
 
     /**
@@ -144,7 +140,6 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
     public function isValidDelivery(Country $country)
     {
         // Retrieve the cart
-        //$areaId = $country->getAreaId();
         $cart = $this->getRequest()->getSession()->getSessionCart();
 
         /** @var CustomDeliverySlice $slice */
@@ -222,9 +217,6 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
                     $postage->setTaxRuleTitle($taxRuleI18N->getTitle());
                 }
             }
-
-
-
         }
 
         return $postage;
@@ -268,15 +260,6 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         }
 
         return $postage;
-    }
-
-    protected function trans($id, array $parameters = [], $locale = null)
-    {
-        if (null === $this->translator) {
-            $this->translator = Translator::getInstance();
-        }
-
-        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN, $locale);
     }
 
     /**

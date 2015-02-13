@@ -17,18 +17,20 @@ use CustomDelivery\CustomDelivery;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Thelia\Form\BaseForm;
-use VirtualProductGereso\VirtualProductGereso;
 
 /**
  * Class SliceForm
  * @package VirtualProductGereso\Form
- * @author Julien Chanséaume <jchanseaume@openstudio.fr>
+ * @author Julien Chanséaume <julien@thelia.net>
  */
 class SliceForm extends BaseForm
 {
-    protected function trans($id, array $parameters = [])
+    /**
+     * @return string the name of you form. This name must be unique
+     */
+    public function getName()
     {
-        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN);
+        return "customdelivery-configuration-form";
     }
 
     protected function buildForm()
@@ -71,8 +73,8 @@ class SliceForm extends BaseForm
                 ]
             )
             ->add(
-                "area",
-                "area_id",
+                "weightMax",
+                "float",
                 [
                     'constraints' => [
                         new NotBlank(),
@@ -80,27 +82,11 @@ class SliceForm extends BaseForm
                     ],
                     'label' => $this->trans("Area"),
                 ]
-            )
-            ->add(
-                "area",
-                "area_id",
-                [
-                    'constraints' => [
-                        new NotBlank(),
-                        new GreaterThanOrEqual(['value' => 0])
-                    ],
-                    'label' => $this->trans("Area"),
-                ]
-            )
-
-        ;
+            );
     }
 
-    /**
-     * @return string the name of you form. This name must be unique
-     */
-    public function getName()
+    protected function trans($id, array $parameters = [])
     {
-        return "customdelivery-configuration-form";
+        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN);
     }
 }

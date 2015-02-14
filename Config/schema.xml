@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database defaultIdMethod="native" name="thelia"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="../../../../core/vendor/propel/propel/resources/xsd/database.xsd" >
+
+    <table name="custom_delivery_slice" namespace="CustomDelivery\Model">
+
+        <column autoIncrement="true" name="id" primaryKey="true" required="true" type="INTEGER" />
+
+        <column name="area_id" type="INTEGER" required="true" />
+
+        <column defaultValue="0" name="price_max" type="FLOAT" />
+        <column defaultValue="0" name="weight_max" type="FLOAT" />
+        <column defaultValue="0" name="price" type="FLOAT" />
+
+        <foreign-key foreignTable="area" name="fk_area_id" onDelete="CASCADE" onUpdate="RESTRICT">
+            <reference foreign="id" local="area_id" />
+        </foreign-key>
+
+    </table>
+
+    <external-schema filename="local/config/schema.xml" referenceOnly="true" />
+</database>

@@ -80,8 +80,8 @@ class BackController extends BaseAdminController
             }
 
             if ($config['method'] != CustomDelivery::METHOD_WEIGHT) {
-                $priceMax = floatval($requestData->get('priceMax', 0));
-                if (0 != $priceMax) {
+                $priceMax = $this->getFloatVal($requestData->get('priceMax', 0));
+                if (0 < $priceMax) {
                     $slice->setPriceMax($priceMax);
                 } else {
                     $messages[] = $this->getTranslator()->trans(
@@ -93,8 +93,8 @@ class BackController extends BaseAdminController
             }
 
             if ($config['method'] != CustomDelivery::METHOD_PRICE) {
-                $weightMax = floatval($requestData->get('weightMax', 0));
-                if (0 != $weightMax) {
+                $weightMax = $this->getFloatVal($requestData->get('weightMax', 0));
+                if (0 < $weightMax) {
                     $slice->setWeightMax($weightMax);
                 } else {
                     $messages[] = $this->getTranslator()->trans(
@@ -105,9 +105,17 @@ class BackController extends BaseAdminController
                 }
             }
 
-            $price = floatval($requestData->get('price', 0));
-            $slice->setPrice($price);
-
+            $price = $this->getFloatVal($requestData->get('price', 0));
+            if (0 <= $price) {
+                $slice->setPrice($price);
+            } else {
+                $messages[] = $this->getTranslator()->trans(
+                    'The price value is not valid',
+                    [],
+                    CustomDelivery::MESSAGE_DOMAIN
+                );
+            }
+            
             if (0 === count($messages)) {
                 $slice->save();
                 $messages[] = $this->getTranslator()->trans(
@@ -126,6 +134,22 @@ class BackController extends BaseAdminController
         $responseData['message'] = $messages;
 
         return $this->jsonResponse(json_encode($responseData));
+    }
+
+    protected function getFloatVal($val, $default=-1) 
+    {
+        if (preg_match("#^([0-9\.,]+)$#", $val, $match)) {
+            $val = $match[0];
+            if(strstr($val, ",")) { 
+                $val = str_replace(".", "", $val);
+                $val = str_replace(",", ".", $val);
+            }
+            $val = floatval($val);
+            
+            return $val;
+        }
+
+        return $default;
     }
 
     /**

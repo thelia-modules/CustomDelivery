@@ -12,6 +12,7 @@ return array(
     'The area is not valid' => 'La zone n\'est pas valide',
     'The method used to select the right slice.' => 'La méthode utilisée pour sélectionner la bonne tranche.',
     'The price max value is not valid' => 'La valeur du prix max n\'est pas valide',
+    'The price value is not valid' => 'La valeur du prix n\'est pas valide',
     'The slice has not been deleted' => 'Votre tranche n\'a pas été supprimé',
     'The tax rule used to calculate postage taxes.' => 'La règle de taxe utilisée pour calculer les taxes associés à la livraison.',
     'The tracking URL. %ID% will be replaced by the tracking number entered in the order' => 'L\'URL de suivi. %ID% sera remplacé par le numéro de suivi saisi dans la commande',

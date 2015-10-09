@@ -1,8 +1,4 @@
 
-{javascripts source="CustomDelivery" file='assets/js/bootbox/bootbox.min.js'}
-<script src="{$asset_url}"></script>
-{/javascripts}
-
 {javascripts file='assets/js/libs/underscore-min.js'}
 <script src="{$asset_url}"></script>
 {/javascripts}
@@ -21,6 +17,14 @@
     $(document).ready(function () {
 
         var tpl = _.template($("#tpl-slice").html());
+
+        var showMessage = function showMessage(message) {
+            $('#custom_delivery_dialog')
+                .find('.modal-body')
+                    .html(message)
+                .end()
+                .modal("show");
+        };
 
         var getSliceData = function getSliceData($slice) {
             var data = {
@@ -54,10 +58,10 @@
 
                     $(sliceHtml).insertBefore($slice);
                 } else {
-                    bootbox.alert(data.message.join('<br>'));
+                    showMessage(data.message.join('<br>'));
                 }
             }).fail(function(jqXHR, textStatus, errorThrown){
-                bootbox.alert(textStatus);
+                showMessage(textStatus);
             });
         });
 
@@ -73,12 +77,15 @@
                 url: config.urlAdd
             }).done(function(data, textStatus, jqXHR){
                 if (!data.success) {
-                    bootbox.alert(data.message.join('<br>'));
+                    showMessage(data.message.join('<br>'));
                 } else {
-                    $slice.find('.js-slice-save').removeClass('btn-success');
+                    var sliceHtml = tpl(data.slice);
+                    $(sliceHtml).insertBefore($slice);
+                    $slice.remove();
+                    // $slice.find('.js-slice-save').removeClass('btn-success');
                 }
             }).fail(function(jqXHR, textStatus, errorThrown){
-                bootbox.alert(textStatus);
+                showMessage(textStatus);
             });
         });
 
@@ -101,10 +108,10 @@
                 if (data.success) {
                     $slice.remove();
                 } else {
-                    bootbox.alert(data.message);
+                    showMessage(data.message);
                 }
             }).fail(function(jqXHR, textStatus, errorThrown){
-                bootbox.alert(textStatus);
+                showMessage(textStatus);
             });
         });
 

@@ -138,11 +138,28 @@
                 </div>
 
             {/loop}
-
+            {elseloop rel="area"}
+                <div class="col-md-12">
+                    <div class="alert alert-warning">
+                        {intl d='customdelivery.bo.default' l="You should first attribute shipping zones to the modules: "}
+                        <a href="{url path="/admin/configuration/shipping_zones/update/$module_id"}">
+                            {intl d='customdelivery.bo.default' l="manage shipping zones"}
+                        </a>
+                    </div>
+                </div>
+            {/elseloop}
         </div>
 
     </div>
 </div>
+
+{include
+    file = "includes/generic-warning-dialog.html"
+
+    dialog_id       = "custom_delivery_dialog"
+    dialog_title    = {intl d='customdelivery.bo.default' l="Message"}
+    dialog_body     = ""
+}
 
 {* JS Templates *}
 <script id="tpl-slice" type="text/html">

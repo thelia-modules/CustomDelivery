@@ -85,7 +85,7 @@
                     // $slice.find('.js-slice-save').removeClass('btn-success');
                 }
             }).fail(function(jqXHR, textStatus, errorThrown){
-                bootbox.alert(textStatus);
+                showMessage(textStatus);
             });
         });
 

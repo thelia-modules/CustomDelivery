@@ -1,3 +1,7 @@
+# 1.0.3
+
+- Fixed stability tag in module.xml
+
 # 1.0.2
 
 - Removed bootbox dependency

@@ -22,7 +22,9 @@ use Thelia\Model\Base\TaxRuleQuery;
 use Thelia\Model\Cart;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\Country;
+use Thelia\Model\CountryAreaQuery;
 use Thelia\Model\LangQuery;
+use Thelia\Model\Map\CountryAreaTableMap;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
 use Thelia\Model\OrderPostage;
@@ -158,11 +160,13 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         $config = self::getConfig();
 
         $currency = $cart->getCurrency();
+    
+        $areas = CountryAreaQuery::create()
+            ->select([ CountryAreaTableMap::AREA_ID ])
+            ->findByCountryId($country->getId())
+        ;
 
-        $areaId = $country->getAreaId();
-
-        $query = CustomDeliverySliceQuery::create()
-            ->filterByAreaId($areaId);
+        $query = CustomDeliverySliceQuery::create()->filterByAreaId($areas, Criteria::IN);
 
         if ($config['method'] != CustomDelivery::METHOD_PRICE) {
             $query->filterByWeightMax($cart->getWeight(), Criteria::GREATER_THAN);

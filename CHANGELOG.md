@@ -1,3 +1,7 @@
+# 1.0.7
+
+- The dispatcher is now passed to Session::getSessionCart()
+
 # 1.0.3
 
 - Fixed stability tag in module.xml

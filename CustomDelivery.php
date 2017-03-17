@@ -142,7 +142,7 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
     public function isValidDelivery(Country $country)
     {
         // Retrieve the cart
-        $cart = $this->getRequest()->getSession()->getSessionCart();
+        $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
 
         /** @var CustomDeliverySlice $slice */
         $slice = $this->getSlicePostage($cart, $country);
@@ -254,7 +254,7 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
     public function getPostage(Country $country)
     {
         $areaId = $country->getAreaId();
-        $cart = $this->getRequest()->getSession()->getSessionCart();
+        $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
 
         /** @var CustomDeliverySlice $slice */
         $postage = $this->getSlicePostage($cart, $country);

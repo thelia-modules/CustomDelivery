@@ -28,6 +28,7 @@ use Thelia\Model\Map\CountryAreaTableMap;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
 use Thelia\Model\OrderPostage;
+use Thelia\Model\State;
 use Thelia\Module\BaseModule;
 use Thelia\Module\DeliveryModuleInterface;
 use Thelia\Module\Exception\DeliveryException;
@@ -136,35 +137,38 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
      * If you return false, the delivery method will not be displayed
      *
      * @param Country $country the country to deliver to.
+     * @param State $state the state to deliver to.
      *
      * @return boolean
      */
-    public function isValidDelivery(Country $country)
+    public function isValidDelivery(Country $country, State $state = null)
     {
         // Retrieve the cart
         $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
 
         /** @var CustomDeliverySlice $slice */
-        $slice = $this->getSlicePostage($cart, $country);
+        $slice = $this->getSlicePostage($cart, $country, $state);
 
         return null !== $slice;
     }
 
     /**
      * @param Cart $cart
-     * @param $areaId
-     * @return |null
+     * @param Country $country
+     * @param State $state
+     * @return OrderPostage|null
      */
-    protected function getSlicePostage(Cart $cart, Country $country)
+    protected function getSlicePostage(Cart $cart, Country $country, State $state = null)
     {
         $config = self::getConfig();
 
         $currency = $cart->getCurrency();
     
         $areas = CountryAreaQuery::create()
+            ->filterByCountryId($country->getId())
+            ->filterByStateId(null === $state ? null : $state->getId())
             ->select([ CountryAreaTableMap::AREA_ID ])
-            ->findByCountryId($country->getId())
-        ;
+            ->find();
 
         $query = CustomDeliverySliceQuery::create()->filterByAreaId($areas, Criteria::IN);
 
@@ -247,13 +251,13 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
      * Calculate and return delivery price in the shop's default currency
      *
      * @param Country $country the country to deliver to.
+     * @param State $state the state to deliver to.
      *
      * @return OrderPostage             the delivery price
      * @throws DeliveryException if the postage price cannot be calculated.
      */
-    public function getPostage(Country $country)
+    public function getPostage(Country $country, State $state = null)
     {
-        $areaId = $country->getAreaId();
         $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
 
         /** @var CustomDeliverySlice $slice */

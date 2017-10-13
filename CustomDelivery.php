@@ -23,6 +23,7 @@ use Thelia\Model\Cart;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\Country;
 use Thelia\Model\CountryAreaQuery;
+use Thelia\Model\Currency;
 use Thelia\Model\LangQuery;
 use Thelia\Model\Map\CountryAreaTableMap;
 use Thelia\Model\Message;
@@ -161,20 +162,43 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
     protected function getSlicePostage(Cart $cart, Country $country, State $state = null)
     {
         $config = self::getConfig();
-
         $currency = $cart->getCurrency();
-    
-        $areas = CountryAreaQuery::create()
-            ->filterByCountryId($country->getId());
+        /** @var CustomDeliverySlice $slice */
+        $slice = null;
 
-        if (null !== $state) {
-            $areas->filterByStateId($state->getId());
+        if (null !== $state && null !== $areas = CountryAreaQuery::create()
+                ->filterByStateId($state->getId())
+                ->select([CountryAreaTableMap::AREA_ID])
+                ->find()
+        ) {
+            $slice = $this->getAreaSlice($areas, $cart, $currency, $config);
         }
 
-        $areas = $areas
-            ->select([ CountryAreaTableMap::AREA_ID ])
-            ->find();
+        if (null === $slice && null !== $areas = CountryAreaQuery::create()
+                ->filterByCountryId($country->getId())
+                ->filterByStateId(null)
+                ->select([CountryAreaTableMap::AREA_ID])
+                ->find()
+        ) {
+            $slice = $this->getAreaSlice($areas, $cart, $currency, $config);
+        }
 
+        if ($slice === null) {
+            return null;
+        }
+
+        return $this->getAreaPostage($slice, $currency, $country, $config);
+    }
+
+    /**
+     * @param $areas
+     * @param Cart $cart
+     * @param Currency $currency
+     * @param $config
+     * @return CustomDeliverySlice
+     */
+    protected function getAreaSlice($areas, Cart $cart, Currency $currency, $config)
+    {
         $query = CustomDeliverySliceQuery::create()->filterByAreaId($areas, Criteria::IN);
 
         if ($config['method'] != CustomDelivery::METHOD_PRICE) {
@@ -193,42 +217,49 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
             $query->orderByPriceMax(Criteria::ASC);
         }
 
-        $slice = $query->findOne();
-        $postage = null;
+        return $query->findOne();
+    }
 
-        if (null !== $slice) {
-            $postage = new OrderPostage();
+    /**
+     * @param CustomDeliverySlice $slice
+     * @param Currency $currency
+     * @param Country $country
+     * @param $config
+     * @return OrderPostage
+     */
+    protected function getAreaPostage(CustomDeliverySlice $slice, Currency $currency, Country $country, $config)
+    {
+        $postage = new OrderPostage();
 
-            if (0 == $currency->getByDefault()) {
-                $price = $slice->getPrice() * $currency->getRate();
-            } else {
-                $price = $slice->getPrice();
-            }
-            $price = round($price, 2);
+        if (0 == $currency->getByDefault()) {
+            $price = $slice->getPrice() * $currency->getRate();
+        } else {
+            $price = $slice->getPrice();
+        }
+        $price = round($price, 2);
 
-            $postage->setAmount($price);
-            $postage->setAmountTax(0);
+        $postage->setAmount($price);
+        $postage->setAmountTax(0);
 
-            // taxed amount
-            if (0 !== $config['tax']) {
-                $taxRuleI18N = I18n::forceI18nRetrieving(
-                    $this->getRequest()->getSession()->getLang()->getLocale(),
-                    'TaxRule',
-                    $config['tax']
+        // taxed amount
+        if (0 !== $config['tax']) {
+            $taxRuleI18N = I18n::forceI18nRetrieving(
+                $this->getRequest()->getSession()->getLang()->getLocale(),
+                'TaxRule',
+                $config['tax']
+            );
+            $taxRule = TaxRuleQuery::create()->findPk($config['tax']);
+            if (null !== $taxRule) {
+                $taxCalculator = new Calculator();
+                $taxCalculator->loadTaxRuleWithoutProduct($taxRule, $country);
+
+                $postage->setAmount(
+                    round($taxCalculator->getTaxedPrice($price), 2)
                 );
-                $taxRule = TaxRuleQuery::create()->findPk($config['tax']);
-                if (null !== $taxRule) {
-                    $taxCalculator = new Calculator();
-                    $taxCalculator->loadTaxRuleWithoutProduct($taxRule, $country);
 
-                    $postage->setAmount(
-                        round($taxCalculator->getTaxedPrice($price), 2)
-                    );
+                $postage->setAmountTax($postage->getAmount() - $price);
 
-                    $postage->setAmountTax($postage->getAmount() - $price);
-
-                    $postage->setTaxRuleTitle($taxRuleI18N->getTitle());
-                }
+                $postage->setTaxRuleTitle($taxRuleI18N->getTitle());
             }
         }
 

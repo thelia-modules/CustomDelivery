@@ -165,8 +165,13 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         $currency = $cart->getCurrency();
     
         $areas = CountryAreaQuery::create()
-            ->filterByCountryId($country->getId())
-            ->filterByStateId(null === $state ? null : $state->getId())
+            ->filterByCountryId($country->getId());
+
+        if (null !== $state) {
+            $areas->filterByStateId($state->getId());
+        }
+
+        $areas = $areas
             ->select([ CountryAreaTableMap::AREA_ID ])
             ->find();
 
@@ -261,7 +266,7 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
 
         /** @var CustomDeliverySlice $slice */
-        $postage = $this->getSlicePostage($cart, $country);
+        $postage = $this->getSlicePostage($cart, $country, $state);
 
         if (null === $postage) {
             throw new DeliveryException();

@@ -38,7 +38,6 @@ use Thelia\Tools\I18n;
 
 class CustomDelivery extends BaseModule implements DeliveryModuleInterface
 {
-
     const MESSAGE_DOMAIN = "customdelivery";
 
     const CONFIG_TRACKING_URL = 'custom_delivery_tracking_url';
@@ -55,6 +54,23 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
 
     /** @var Translator */
     protected $translator;
+
+    public static function getConfig()
+    {
+        $config = [
+            'url' => (
+                ConfigQuery::read(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL)
+            ),
+            'method' => (
+                intval(ConfigQuery::read(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD))
+            ),
+            'tax' => (
+                intval(ConfigQuery::read(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID))
+            )
+        ];
+
+        return $config;
+    }
 
     public function preActivation(ConnectionInterface $con = null)
     {
@@ -121,15 +137,6 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         }
     }
 
-    protected function trans($id, array $parameters = [], $locale = null)
-    {
-        if (null === $this->translator) {
-            $this->translator = Translator::getInstance();
-        }
-
-        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN, $locale);
-    }
-
     /**
      * This method is called by the Delivery  loop, to check if the current module has to be displayed to the customer.
      * Override it to implements your delivery rules/
@@ -154,6 +161,54 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
     }
 
     /**
+     * Calculate and return delivery price in the shop's default currency
+     *
+     * @param Country $country the country to deliver to.
+     * @param State $state the state to deliver to.
+     *
+     * @return OrderPostage             the delivery price
+     * @throws DeliveryException if the postage price cannot be calculated.
+     */
+    public function getPostage(Country $country, State $state = null)
+    {
+        $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
+
+        /** @var CustomDeliverySlice $slice */
+        $postage = $this->getSlicePostage($cart, $country, $state);
+
+        if (null === $postage) {
+            throw new DeliveryException();
+        }
+
+        return $postage;
+    }
+
+    /**
+     *
+     * This method return true if your delivery manages virtual product delivery.
+     *
+     * @return bool
+     */
+    public function handleVirtualProductDelivery()
+    {
+        return false;
+    }
+
+    protected function trans($id, array $parameters = [], $locale = null)
+    {
+        if (null === $this->translator) {
+            $this->translator = Translator::getInstance();
+        }
+
+        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN, $locale);
+    }
+
+    /**
+     * If a state is given and has slices, use them.
+     * If state is given but has no slices, check if the country has slices.
+     * If the country has slices, use them.
+     * If the country has no slices, the module is not valid for delivery
+     *
      * @param Cart $cart
      * @param Country $country
      * @param State $state
@@ -264,56 +319,5 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         }
 
         return $postage;
-    }
-
-    public static function getConfig()
-    {
-        $config = [
-            'url' => (
-            ConfigQuery::read(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL)
-            ),
-            'method' => (
-            intval(ConfigQuery::read(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD))
-            ),
-            'tax' => (
-            intval(ConfigQuery::read(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID))
-            )
-        ];
-
-        return $config;
-    }
-
-    /**
-     * Calculate and return delivery price in the shop's default currency
-     *
-     * @param Country $country the country to deliver to.
-     * @param State $state the state to deliver to.
-     *
-     * @return OrderPostage             the delivery price
-     * @throws DeliveryException if the postage price cannot be calculated.
-     */
-    public function getPostage(Country $country, State $state = null)
-    {
-        $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
-
-        /** @var CustomDeliverySlice $slice */
-        $postage = $this->getSlicePostage($cart, $country, $state);
-
-        if (null === $postage) {
-            throw new DeliveryException();
-        }
-
-        return $postage;
-    }
-
-    /**
-     *
-     * This method return true if your delivery manages virtual product delivery.
-     *
-     * @return bool
-     */
-    public function handleVirtualProductDelivery()
-    {
-        return false;
     }
 }

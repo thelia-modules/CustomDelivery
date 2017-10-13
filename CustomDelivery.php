@@ -23,6 +23,7 @@ use Thelia\Model\Cart;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\Country;
 use Thelia\Model\CountryAreaQuery;
+use Thelia\Model\Currency;
 use Thelia\Model\LangQuery;
 use Thelia\Model\Map\CountryAreaTableMap;
 use Thelia\Model\Message;
@@ -37,7 +38,6 @@ use Thelia\Tools\I18n;
 
 class CustomDelivery extends BaseModule implements DeliveryModuleInterface
 {
-
     const MESSAGE_DOMAIN = "customdelivery";
 
     const CONFIG_TRACKING_URL = 'custom_delivery_tracking_url';
@@ -54,6 +54,23 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
 
     /** @var Translator */
     protected $translator;
+
+    public static function getConfig()
+    {
+        $config = [
+            'url' => (
+                ConfigQuery::read(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL)
+            ),
+            'method' => (
+                intval(ConfigQuery::read(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD))
+            ),
+            'tax' => (
+                intval(ConfigQuery::read(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID))
+            )
+        ];
+
+        return $config;
+    }
 
     public function preActivation(ConnectionInterface $con = null)
     {
@@ -120,15 +137,6 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         }
     }
 
-    protected function trans($id, array $parameters = [], $locale = null)
-    {
-        if (null === $this->translator) {
-            $this->translator = Translator::getInstance();
-        }
-
-        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN, $locale);
-    }
-
     /**
      * This method is called by the Delivery  loop, to check if the current module has to be displayed to the customer.
      * Override it to implements your delivery rules/
@@ -150,106 +158,6 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         $slice = $this->getSlicePostage($cart, $country, $state);
 
         return null !== $slice;
-    }
-
-    /**
-     * @param Cart $cart
-     * @param Country $country
-     * @param State $state
-     * @return OrderPostage|null
-     */
-    protected function getSlicePostage(Cart $cart, Country $country, State $state = null)
-    {
-        $config = self::getConfig();
-
-        $currency = $cart->getCurrency();
-    
-        $areas = CountryAreaQuery::create()
-            ->filterByCountryId($country->getId());
-
-        if (null !== $state) {
-            $areas->filterByStateId($state->getId());
-        }
-
-        $areas = $areas
-            ->select([ CountryAreaTableMap::AREA_ID ])
-            ->find();
-
-        $query = CustomDeliverySliceQuery::create()->filterByAreaId($areas, Criteria::IN);
-
-        if ($config['method'] != CustomDelivery::METHOD_PRICE) {
-            $query->filterByWeightMax($cart->getWeight(), Criteria::GREATER_THAN);
-            $query->orderByWeightMax(Criteria::ASC);
-        }
-
-        if ($config['method'] != CustomDelivery::METHOD_WEIGHT) {
-            $total = $cart->getTotalAmount();
-            // convert amount to the default currency
-            if (0 == $currency->getByDefault()) {
-                $total = $total / $currency->getRate();
-            }
-
-            $query->filterByPriceMax($total, Criteria::GREATER_THAN);
-            $query->orderByPriceMax(Criteria::ASC);
-        }
-
-        $slice = $query->findOne();
-        $postage = null;
-
-        if (null !== $slice) {
-            $postage = new OrderPostage();
-
-            if (0 == $currency->getByDefault()) {
-                $price = $slice->getPrice() * $currency->getRate();
-            } else {
-                $price = $slice->getPrice();
-            }
-            $price = round($price, 2);
-
-            $postage->setAmount($price);
-            $postage->setAmountTax(0);
-
-            // taxed amount
-            if (0 !== $config['tax']) {
-                $taxRuleI18N = I18n::forceI18nRetrieving(
-                    $this->getRequest()->getSession()->getLang()->getLocale(),
-                    'TaxRule',
-                    $config['tax']
-                );
-                $taxRule = TaxRuleQuery::create()->findPk($config['tax']);
-                if (null !== $taxRule) {
-                    $taxCalculator = new Calculator();
-                    $taxCalculator->loadTaxRuleWithoutProduct($taxRule, $country);
-
-                    $postage->setAmount(
-                        round($taxCalculator->getTaxedPrice($price), 2)
-                    );
-
-                    $postage->setAmountTax($postage->getAmount() - $price);
-
-                    $postage->setTaxRuleTitle($taxRuleI18N->getTitle());
-                }
-            }
-        }
-
-        return $postage;
-    }
-
-    public static function getConfig()
-    {
-        $config = [
-            'url' => (
-            ConfigQuery::read(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL)
-            ),
-            'method' => (
-            intval(ConfigQuery::read(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD))
-            ),
-            'tax' => (
-            intval(ConfigQuery::read(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID))
-            )
-        ];
-
-        return $config;
     }
 
     /**
@@ -284,5 +192,132 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
     public function handleVirtualProductDelivery()
     {
         return false;
+    }
+
+    protected function trans($id, array $parameters = [], $locale = null)
+    {
+        if (null === $this->translator) {
+            $this->translator = Translator::getInstance();
+        }
+
+        return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN, $locale);
+    }
+
+    /**
+     * If a state is given and has slices, use them.
+     * If state is given but has no slices, check if the country has slices.
+     * If the country has slices, use them.
+     * If the country has no slices, the module is not valid for delivery
+     *
+     * @param Cart $cart
+     * @param Country $country
+     * @param State $state
+     * @return OrderPostage|null
+     */
+    protected function getSlicePostage(Cart $cart, Country $country, State $state = null)
+    {
+        $config = self::getConfig();
+        $currency = $cart->getCurrency();
+        /** @var CustomDeliverySlice $slice */
+        $slice = null;
+
+        if (null !== $state && null !== $areas = CountryAreaQuery::create()
+                ->filterByStateId($state->getId())
+                ->select([CountryAreaTableMap::AREA_ID])
+                ->find()
+        ) {
+            $slice = $this->getAreaSlice($areas, $cart, $currency, $config);
+        }
+
+        if (null === $slice && null !== $areas = CountryAreaQuery::create()
+                ->filterByCountryId($country->getId())
+                ->filterByStateId(null)
+                ->select([CountryAreaTableMap::AREA_ID])
+                ->find()
+        ) {
+            $slice = $this->getAreaSlice($areas, $cart, $currency, $config);
+        }
+
+        if ($slice === null) {
+            return null;
+        }
+
+        return $this->getAreaPostage($slice, $currency, $country, $config);
+    }
+
+    /**
+     * @param $areas
+     * @param Cart $cart
+     * @param Currency $currency
+     * @param $config
+     * @return CustomDeliverySlice
+     */
+    protected function getAreaSlice($areas, Cart $cart, Currency $currency, $config)
+    {
+        $query = CustomDeliverySliceQuery::create()->filterByAreaId($areas, Criteria::IN);
+
+        if ($config['method'] != CustomDelivery::METHOD_PRICE) {
+            $query->filterByWeightMax($cart->getWeight(), Criteria::GREATER_THAN);
+            $query->orderByWeightMax(Criteria::ASC);
+        }
+
+        if ($config['method'] != CustomDelivery::METHOD_WEIGHT) {
+            $total = $cart->getTotalAmount();
+            // convert amount to the default currency
+            if (0 == $currency->getByDefault()) {
+                $total = $total / $currency->getRate();
+            }
+
+            $query->filterByPriceMax($total, Criteria::GREATER_THAN);
+            $query->orderByPriceMax(Criteria::ASC);
+        }
+
+        return $query->findOne();
+    }
+
+    /**
+     * @param CustomDeliverySlice $slice
+     * @param Currency $currency
+     * @param Country $country
+     * @param $config
+     * @return OrderPostage
+     */
+    protected function getAreaPostage(CustomDeliverySlice $slice, Currency $currency, Country $country, $config)
+    {
+        $postage = new OrderPostage();
+
+        if (0 == $currency->getByDefault()) {
+            $price = $slice->getPrice() * $currency->getRate();
+        } else {
+            $price = $slice->getPrice();
+        }
+        $price = round($price, 2);
+
+        $postage->setAmount($price);
+        $postage->setAmountTax(0);
+
+        // taxed amount
+        if (0 !== $config['tax']) {
+            $taxRuleI18N = I18n::forceI18nRetrieving(
+                $this->getRequest()->getSession()->getLang()->getLocale(),
+                'TaxRule',
+                $config['tax']
+            );
+            $taxRule = TaxRuleQuery::create()->findPk($config['tax']);
+            if (null !== $taxRule) {
+                $taxCalculator = new Calculator();
+                $taxCalculator->loadTaxRuleWithoutProduct($taxRule, $country);
+
+                $postage->setAmount(
+                    round($taxCalculator->getTaxedPrice($price), 2)
+                );
+
+                $postage->setAmountTax($postage->getAmount() - $price);
+
+                $postage->setTaxRuleTitle($taxRuleI18N->getTitle());
+            }
+        }
+
+        return $postage;
     }
 }

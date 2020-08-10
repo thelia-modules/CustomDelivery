@@ -203,6 +203,11 @@ class CustomDelivery extends BaseModule implements DeliveryModuleInterface
         return $this->translator->trans($id, $parameters, CustomDelivery::MESSAGE_DOMAIN, $locale);
     }
 
+    public static function getDeliveryMode()
+    {
+        return 'delivery';
+    }
+
     /**
      * If a state is given and has slices, use them.
      * If state is given but has no slices, check if the country has slices.

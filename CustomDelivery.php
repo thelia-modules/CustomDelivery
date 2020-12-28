@@ -30,14 +30,14 @@ use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
 use Thelia\Model\OrderPostage;
 use Thelia\Model\State;
-use Thelia\Module\AbstractDeliveryModule;
+use Thelia\Module\AbstractDeliveryModuleWithState;
 use Thelia\Module\BaseModule;
 use Thelia\Module\DeliveryModuleInterface;
 use Thelia\Module\Exception\DeliveryException;
 use Thelia\TaxEngine\Calculator;
 use Thelia\Tools\I18n;
 
-class CustomDelivery extends AbstractDeliveryModule
+class CustomDelivery extends AbstractDeliveryModuleWithState
 {
     const MESSAGE_DOMAIN = "customdelivery";
 

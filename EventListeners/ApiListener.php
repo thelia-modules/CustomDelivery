@@ -8,6 +8,8 @@ use OpenApi\Events\OpenApiEvents;
 use OpenApi\Model\Api\DeliveryModuleOption;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\Base\ModuleQuery;
 use Thelia\Model\OrderPostage;
@@ -18,14 +20,21 @@ class ApiListener implements EventSubscriberInterface
     /** @var ContainerInterface  */
     protected $container;
 
+    /** @var Request */
+    protected $request;
+
     /**
      * APIListener constructor.
      * @param ContainerInterface $container We need the container because we use a service from another module
      * which is not mandatory, and using its service without it being installed will crash
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(
+        ContainerInterface $container,
+        RequestStack $requestStack
+    )
     {
         $this->container = $container;
+        $this->request = $requestStack->getCurrentRequest();
     }
 
     public function getDeliveryModuleOptions(DeliveryModuleOptionEvent $deliveryModuleOptionEvent)
@@ -37,9 +46,12 @@ class ApiListener implements EventSubscriberInterface
         $postage = null;
         $postageTax = null;
 
+        $locale = $this->request->getSession()->getLang()->getLocale();
+
         $propelModule = ModuleQuery::create()
             ->filterById(CustomDelivery::getModuleId())
-            ->findOne();
+            ->findOne()
+            ->setLocale($locale);
 
         try {
             $module = $propelModule->getModuleInstance($this->container);

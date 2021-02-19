@@ -22,6 +22,7 @@
         </service>
         <service id="customdelivery.openapi" class="CustomDelivery\EventListeners\ApiListener" scope="request">
             <argument type="service" id="service_container"/>
+            <argument type="service" id="request_stack"/>
             <tag name="kernel.event_subscriber"/>
         </service>
     </services>

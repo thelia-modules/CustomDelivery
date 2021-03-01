@@ -92,7 +92,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
         return true;
     }
 
-    public function postActivation(ConnectionInterface $con = null)
+    public function postActivation(ConnectionInterface $con = null): void
     {
         // register config variables
         if (null === ConfigQuery::read(self::CONFIG_TRACKING_URL, null)) {

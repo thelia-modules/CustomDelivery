@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\ConfigQuery;
 use Thelia\Tools\URL;
 
@@ -72,7 +73,7 @@ class BackController extends BaseAdminController
             if (0 !== $areaId = intval($requestData->get('area', 0))) {
                 $slice->setAreaId($areaId);
             } else {
-                $messages[] = $this->getTranslator()->trans(
+                $messages[] = Translator::getInstance()->trans(
                     'The area is not valid',
                     [],
                     CustomDelivery::MESSAGE_DOMAIN
@@ -84,7 +85,7 @@ class BackController extends BaseAdminController
                 if (0 < $priceMax) {
                     $slice->setPriceMax($priceMax);
                 } else {
-                    $messages[] = $this->getTranslator()->trans(
+                    $messages[] = Translator::getInstance()->trans(
                         'The price max value is not valid',
                         [],
                         CustomDelivery::MESSAGE_DOMAIN
@@ -97,7 +98,7 @@ class BackController extends BaseAdminController
                 if (0 < $weightMax) {
                     $slice->setWeightMax($weightMax);
                 } else {
-                    $messages[] = $this->getTranslator()->trans(
+                    $messages[] = Translator::getInstance()->trans(
                         'The weight max value is not valid',
                         [],
                         CustomDelivery::MESSAGE_DOMAIN
@@ -109,16 +110,16 @@ class BackController extends BaseAdminController
             if (0 <= $price) {
                 $slice->setPrice($price);
             } else {
-                $messages[] = $this->getTranslator()->trans(
+                $messages[] = Translator::getInstance()->trans(
                     'The price value is not valid',
                     [],
                     CustomDelivery::MESSAGE_DOMAIN
                 );
             }
-            
+
             if (0 === count($messages)) {
                 $slice->save();
-                $messages[] = $this->getTranslator()->trans(
+                $messages[] = Translator::getInstance()->trans(
                     'Your slice has been saved',
                     [],
                     CustomDelivery::MESSAGE_DOMAIN
@@ -136,16 +137,16 @@ class BackController extends BaseAdminController
         return $this->jsonResponse(json_encode($responseData));
     }
 
-    protected function getFloatVal($val, $default=-1) 
+    protected function getFloatVal($val, $default=-1)
     {
         if (preg_match("#^([0-9\.,]+)$#", $val, $match)) {
             $val = $match[0];
-            if(strstr($val, ",")) { 
+            if(strstr($val, ",")) {
                 $val = str_replace(".", "", $val);
                 $val = str_replace(",", ".", $val);
             }
             $val = floatval($val);
-            
+
             return $val;
         }
 
@@ -183,7 +184,7 @@ class BackController extends BaseAdminController
                 $slice->delete();
                 $responseData['success'] = true;
             } else {
-                $responseData['message'] = $this->getTranslator()->trans(
+                $responseData['message'] = Translator::getInstance()->trans(
                     'The slice has not been deleted',
                     [],
                     CustomDelivery::MESSAGE_DOMAIN
@@ -209,7 +210,7 @@ class BackController extends BaseAdminController
             return $response;
         }
 
-        $form = $this->createForm('customdelivery.configuration.form', 'form');
+        $form = $this->createForm('customdelivery.configuration.form');
         $message = "";
 
         $response = null;

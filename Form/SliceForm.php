@@ -14,13 +14,15 @@
 namespace CustomDelivery\Form;
 
 use CustomDelivery\CustomDelivery;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Thelia\Core\Form\Type\Field\AreaIdType;
 use Thelia\Form\BaseForm;
+use Thelia\Type\FloatType;
 
 /**
  * Class SliceForm
- * @package VirtualProductGereso\Form
  * @author Julien Chanséaume <julien@thelia.net>
  */
 class SliceForm extends BaseForm
@@ -28,7 +30,7 @@ class SliceForm extends BaseForm
     /**
      * @return string the name of you form. This name must be unique
      */
-    public function getName()
+    public static function getName()
     {
         return "customdelivery-configuration-form";
     }
@@ -37,12 +39,10 @@ class SliceForm extends BaseForm
     {
         $form = $this->formBuilder;
 
-        $config = CustomDelivery::getConfig();
-
         $form
             ->add(
                 "id",
-                "number",
+                NumberType::class,
                 [
                     'constraints' => [
                         new NotBlank()
@@ -52,7 +52,7 @@ class SliceForm extends BaseForm
             )
             ->add(
                 "area",
-                "area_id",
+                AreaIdType::class,
                 [
                     'constraints' => [
                         new NotBlank(),
@@ -63,7 +63,7 @@ class SliceForm extends BaseForm
             )
             ->add(
                 "priceMax",
-                "float",
+                FloatType::class,
                 [
                     'constraints' => [
                         new NotBlank(),
@@ -74,7 +74,7 @@ class SliceForm extends BaseForm
             )
             ->add(
                 "weightMax",
-                "float",
+                FloatType::class,
                 [
                     'constraints' => [
                         new NotBlank(),

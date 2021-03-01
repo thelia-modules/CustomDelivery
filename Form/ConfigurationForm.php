@@ -14,16 +14,18 @@
 namespace CustomDelivery\Form;
 
 use CustomDelivery\CustomDelivery;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\ExecutionContextInterface;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use Thelia\Core\Form\Type\Field\TaxRuleIdType;
 use Thelia\Form\BaseForm;
 use Thelia\Model\Base\TaxRuleQuery;
 
 /**
  * Class ConfigurationForm
- * @package VirtualProductGereso\Form
  * @author Julien Chanséaume <julien@thelia.net>
  */
 class ConfigurationForm extends BaseForm
@@ -47,7 +49,7 @@ class ConfigurationForm extends BaseForm
     /**
      * @return string the name of you form. This name must be unique
      */
-    public function getName()
+    public static function getName()
     {
         return "customdelivery-configuration-form";
     }
@@ -61,7 +63,7 @@ class ConfigurationForm extends BaseForm
         $form
             ->add(
                 "url",
-                "text",
+                TextType::class,
                 [
                     'constraints' => [
                         new NotBlank()
@@ -78,16 +80,16 @@ class ConfigurationForm extends BaseForm
             )
             ->add(
                 "method",
-                "choice",
+                ChoiceType::class,
                 [
                     'constraints' => [
                         new NotBlank(),
                         new GreaterThanOrEqual(['value' => 0])
                     ],
                     "choices" => [
-                        CustomDelivery::METHOD_PRICE_WEIGHT => $this->trans("Price and weight"),
-                        CustomDelivery::METHOD_PRICE => $this->trans("Price"),
-                        CustomDelivery::METHOD_WEIGHT => $this->trans("Weight"),
+                        $this->trans("Price and weight") => CustomDelivery::METHOD_PRICE_WEIGHT,
+                        $this->trans("Price") => CustomDelivery::METHOD_PRICE,
+                        $this->trans("Weight") =>CustomDelivery::METHOD_WEIGHT
                     ],
                     'data' => $config['method'],
                     'label' => $this->trans("Method"),
@@ -101,14 +103,12 @@ class ConfigurationForm extends BaseForm
             )
             ->add(
                 "tax",
-                "tax_rule_id",
+                TaxRuleIdType::class,
                 [
                     "constraints" => [
-                        new Callback([
-                            "methods" => [
-                                [$this, "checkTaxRuleId"]
-                            ]
-                        ])
+                        new Callback(
+                            [$this, 'checkTaxRuleId']
+                        ),
                     ],
                     'required' => false,
                     'data' => $config['tax'],

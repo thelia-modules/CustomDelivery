@@ -6,6 +6,7 @@ use CustomDelivery\CustomDelivery;
 use OpenApi\Events\DeliveryModuleOptionEvent;
 use OpenApi\Events\OpenApiEvents;
 use OpenApi\Model\Api\DeliveryModuleOption;
+use OpenApi\Service\ImageService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -23,18 +24,24 @@ class ApiListener implements EventSubscriberInterface
     /** @var Request */
     protected $request;
 
+    /** @var ImageService  */
+    protected $imageService;
+
     /**
      * APIListener constructor.
      * @param ContainerInterface $container We need the container because we use a service from another module
      * which is not mandatory, and using its service without it being installed will crash
+     * @param RequestStack $requestStack
+     * @param ImageService $imageService
      */
     public function __construct(
         ContainerInterface $container,
-        RequestStack $requestStack
-    )
-    {
+        RequestStack $requestStack,
+        ImageService $imageService
+    ) {
         $this->container = $container;
         $this->request = $requestStack->getCurrentRequest();
+        $this->imageService = $imageService;
     }
 
     public function getDeliveryModuleOptions(DeliveryModuleOptionEvent $deliveryModuleOptionEvent)
@@ -73,13 +80,24 @@ class ApiListener implements EventSubscriberInterface
         $minimumDeliveryDate = ''; // TODO (calculate delivery date from day of order)
         $maximumDeliveryDate = ''; // TODO (calculate delivery date from day of order
 
+        $image = null;
+        $imageQuery = ModuleImageQuery::create()->findByModuleId($deliveryModuleOptionEvent->getModule()->getId())->getFirst();
+
+        if (null !== $imageQuery) {
+            try {
+                $image = $this->imageService->getImageUrl($imageQuery, 'module');
+            } catch (\Exception $e) {
+                Tlog::getInstance()->addError($e);
+            }
+        }
+
         /** @var DeliveryModuleOption $deliveryModuleOption */
         $deliveryModuleOption = ($this->container->get('open_api.model.factory'))->buildModel('DeliveryModuleOption');
         $deliveryModuleOption
             ->setCode(CustomDelivery::getModuleCode())
             ->setValid($isValid)
             ->setTitle($propelModule->getTitle())
-            ->setImage('')
+            ->setImage($image)
             ->setMinimumDeliveryDate($minimumDeliveryDate)
             ->setMaximumDeliveryDate($maximumDeliveryDate)
             ->setPostage($postage)

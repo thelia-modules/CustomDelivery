@@ -73,27 +73,16 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
         return $config;
     }
 
-    public function preActivation(ConnectionInterface $con = null)
-    {
-        $injectSql = false;
-
-        try {
-            $item = CustomDeliverySliceQuery::create()->findOne();
-        } catch (\Exception $ex) {
-            // the table doest not exist
-            $injectSql = true;
-        }
-
-        if (true === $injectSql) {
-            $database = new Database($con);
-            $database->insertSql(null, [__DIR__ . '/Config/thelia.sql']);
-        }
-
-        return true;
-    }
-
     public function postActivation(ConnectionInterface $con = null): void
     {
+        if (!$this->getConfigValue('is_initialized', false)) {
+            $database = new Database($con);
+
+            $database->insertSql(null, array(__DIR__ . '/Config/thelia.sql'));
+
+            $this->setConfigValue('is_initialized', true);
+        }
+        
         // register config variables
         if (null === ConfigQuery::read(self::CONFIG_TRACKING_URL, null)) {
             ConfigQuery::write(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL);

@@ -47,7 +47,6 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
 
     const DEFAULT_TRACKING_URL = '%ID%';
     const DEFAULT_PICKING_METHOD = 0;
-    const DEFAULT_TAX_RULE_ID = 0;
 
     const METHOD_PRICE_WEIGHT = 0;
     const METHOD_PRICE = 1;
@@ -60,13 +59,13 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
     {
         $config = [
             'url' => (
-                ConfigQuery::read(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL)
+            ConfigQuery::read(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL)
             ),
             'method' => (
-                intval(ConfigQuery::read(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD))
+            intval(ConfigQuery::read(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD))
             ),
             'tax' => (
-                intval(ConfigQuery::read(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID))
+            intval(ConfigQuery::read(self::CONFIG_TAX_RULE_ID))
             )
         ];
 
@@ -82,7 +81,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
 
             $this->setConfigValue('is_initialized', true);
         }
-        
+
         // register config variables
         if (null === ConfigQuery::read(self::CONFIG_TRACKING_URL, null)) {
             ConfigQuery::write(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL);
@@ -90,10 +89,6 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
 
         if (null === ConfigQuery::read(self::CONFIG_PICKING_METHOD, null)) {
             ConfigQuery::write(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD);
-        }
-
-        if (null === ConfigQuery::read(self::CONFIG_TAX_RULE_ID, null)) {
-            ConfigQuery::write(self::CONFIG_TAX_RULE_ID, self::DEFAULT_TAX_RULE_ID);
         }
 
         // create new message
@@ -279,40 +274,15 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
      */
     protected function getAreaPostage(CustomDeliverySlice $slice, Currency $currency, Country $country, $config)
     {
-        $postage = new OrderPostage();
-
         if (0 == $currency->getByDefault()) {
-            $price = $slice->getPrice() * $currency->getRate();
+            $untaxedPostage = $slice->getPrice() * $currency->getRate();
         } else {
-            $price = $slice->getPrice();
+            $untaxedPostage = $slice->getPrice();
         }
-        $price = round($price, 2);
+        $untaxedPostage = round($untaxedPostage, 2);
 
-        $postage->setAmount($price);
-        $postage->setAmountTax(0);
+        $locale = $this->getRequest()->getSession()->getLang()->getLocale();
 
-        // taxed amount
-        if (0 !== $config['tax']) {
-            $taxRuleI18N = I18n::forceI18nRetrieving(
-                $this->getRequest()->getSession()->getLang()->getLocale(),
-                'TaxRule',
-                $config['tax']
-            );
-            $taxRule = TaxRuleQuery::create()->findPk($config['tax']);
-            if (null !== $taxRule) {
-                $taxCalculator = new Calculator();
-                $taxCalculator->loadTaxRuleWithoutProduct($taxRule, $country);
-
-                $postage->setAmount(
-                    round($taxCalculator->getTaxedPrice($price), 2)
-                );
-
-                $postage->setAmountTax($postage->getAmount() - $price);
-
-                $postage->setTaxRuleTitle($taxRuleI18N->getTitle());
-            }
-        }
-
-        return $postage;
+        return $this->buildOrderPostage($untaxedPostage, $country, $locale, $config['tax']);
     }
 }

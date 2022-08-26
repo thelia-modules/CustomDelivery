@@ -73,9 +73,9 @@ class CustomDeliveryEvents implements EventSubscriberInterface
         $customDelivery = new CustomDelivery();
 
         if ($order->isSent() && $order->getDeliveryModuleId() == $customDelivery->getModuleModel()->getId()) {
-            $contact_email = ConfigQuery::getStoreEmail();
+            $contactEmail = ConfigQuery::getStoreEmail();
 
-            if ($contact_email) {
+            if ($contactEmail) {
 
                 $message = MessageQuery::create()
                     ->filterByName('mail_custom_delivery')
@@ -87,13 +87,6 @@ class CustomDeliveryEvents implements EventSubscriberInterface
 
                 $order = $event->getOrder();
                 $customer = $order->getCustomer();
-
-                $this->parser->assign('customer_id', $customer->getId());
-                $this->parser->assign('order_id', $order->getId());
-                $this->parser->assign('order_ref', $order->getRef());
-                $this->parser->assign('order_date', $order->getCreatedAt());
-                $this->parser->assign('update_date', $order->getUpdatedAt());
-
                 $package = $order->getDeliveryRef();
                 $trackingUrl = null;
 
@@ -104,21 +97,21 @@ class CustomDeliveryEvents implements EventSubscriberInterface
                         $trackingUrl = str_replace('%ID%', $package, $trackingUrl);
                     }
                 }
-                $this->parser->assign('package', $package);
-                $this->parser->assign('tracking_url', $trackingUrl);
 
-                $message
-                    ->setLocale($order->getLang()->getLocale());
-
-                $instance = \Swift_Message::newInstance()
-                    ->addTo($customer->getEmail(), $customer->getFirstname() . " " . $customer->getLastname())
-                    ->addFrom($contact_email, ConfigQuery::getStoreName());
-
-                // Build subject and body
-
-                $message->buildMessage($this->parser, $instance);
-
-                $this->mailer->send($instance);
+                $this->mailer->sendEmailMessage(
+                    'mail_custom_delivery',
+                    [$contactEmail => ConfigQuery::getStoreName()],
+                    [$customer->getEmail() => $customer->getFirstname() . " " . $customer->getLastname()],
+                    [
+                        'customer_id' => $customer->getId(),
+                        'order_id' => $order->getId(),
+                        'order_ref' => $order->getRef(),
+                        'order_date' => $order->getCreatedAt(),
+                        'update_date' => $order->getUpdatedAt(),
+                        'package' => $package,
+                        'tracking_url' => $trackingUrl
+                    ]
+                );
 
                 Tlog::getInstance()->debug(
                     "Custom Delivery shipping message sent to customer " . $customer->getEmail()
@@ -126,8 +119,7 @@ class CustomDeliveryEvents implements EventSubscriberInterface
             } else {
                 $customer = $order->getCustomer();
                 Tlog::getInstance()->debug(
-                    "Custom Delivery shipping message no contact email customer_id",
-                    $customer->getId()
+                    "Custom Delivery shipping message no contact email customer_id ".$customer->getId()
                 );
             }
         }

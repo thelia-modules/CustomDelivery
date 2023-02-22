@@ -49,7 +49,7 @@ class HookManager extends BaseHook
 
         $event->add(
             $this->render(
-                "configuration.html",
+                "module-configuration.html",
                 [
                     'module_id' => $moduleId,
                     'method' => $config['method']

@@ -34,9 +34,9 @@ use Thelia\Tools\URL;
  */
 class BackController extends BaseAdminController
 {
-    protected $currentRouter = 'router.customdelivery';
+    protected string $currentRouter = 'router.customdelivery';
 
-    protected $useFallbackTemplate = true;
+    protected bool $useFallbackTemplate = true;
 
     /**
      * Save slice

@@ -5,7 +5,10 @@ namespace CustomDelivery\Api\Resource;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use CustomDelivery\Model\Map\CustomDeliverySliceTableMap;
+use Propel\Runtime\Map\TableMap;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\Ignore;
 use Thelia\Api\Bridge\Propel\Attribute\Relation;
 use Thelia\Api\Bridge\Propel\State\PropelCollectionProvider;
 use Thelia\Api\Bridge\Propel\State\PropelItemProvider;
@@ -165,4 +168,14 @@ class CustomDeliverySlices
     {
         $this->price = $price;
     }
+
+    /**
+     * @return TableMap|null
+     */
+    #[Ignore]
+    public static function getPropelRelatedTableMap(): ?TableMap
+    {
+        return new CustomDeliverySliceTableMap();
+    }
+
 }

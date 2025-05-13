@@ -13,12 +13,12 @@
         <language>en_US</language>
         <language>fr_FR</language>
     </languages>
-    <version>3.1.3</version>
+    <version>3.1.4</version>
     <author>
-        <name>Julien Chanséaume</name>
-        <email>julien@thelia.net</email>
+        <name>Grégory LAISSUS</name>
+        <email>glaissus@openstudio.fr</email>
     </author>
     <type>delivery</type>
-    <thelia>2.5.0</thelia>
+    <thelia>2.6.0</thelia>
     <stability>prod</stability>
 </module>

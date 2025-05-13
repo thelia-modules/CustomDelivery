@@ -36,6 +36,8 @@ use Thelia\Module\DeliveryModuleInterface;
 use Thelia\Module\Exception\DeliveryException;
 use Thelia\TaxEngine\Calculator;
 use Thelia\Tools\I18n;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
+
 
 class CustomDelivery extends AbstractDeliveryModuleWithState
 {
@@ -284,5 +286,13 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
         $locale = $this->getRequest()->getSession()->getLang()->getLocale();
 
         return $this->buildOrderPostage($untaxedPostage, $country, $locale, $config['tax']);
+    }
+
+    public static function configureServices(ServicesConfigurator $servicesConfigurator): void
+    {
+        $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
+            ->exclude(["/I18n/*"])
+            ->autowire(true)
+            ->autoconfigure(true);
     }
 }

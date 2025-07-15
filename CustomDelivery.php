@@ -213,7 +213,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
 
         if (null !== $state && null !== $areas = CountryAreaQuery::create()
                 ->filterByStateId($state->getId())
-                ->select([CountryAreaTableMap::AREA_ID])
+                ->select([CountryAreaTableMap::COL_AREA_ID])
                 ->find()
         ) {
             $slice = $this->getAreaSlice($areas, $cart, $currency, $config);
@@ -222,7 +222,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
         if (null === $slice && null !== $areas = CountryAreaQuery::create()
                 ->filterByCountryId($country->getId())
                 ->filterByStateId(null)
-                ->select([CountryAreaTableMap::AREA_ID])
+                ->select([CountryAreaTableMap::COL_AREA_ID])
                 ->find()
         ) {
             $slice = $this->getAreaSlice($areas, $cart, $currency, $config);

@@ -134,7 +134,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
      *
      * @return boolean
      */
-    public function isValidDelivery(Country $country, State $state = null)
+    public function isValidDelivery(Country $country, State $state = null): bool
     {
         // Retrieve the cart
         $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
@@ -154,7 +154,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
      * @return OrderPostage             the delivery price
      * @throws DeliveryException if the postage price cannot be calculated.
      */
-    public function getPostage(Country $country, State $state = null)
+    public function getPostage(Country $country, State $state = null): OrderPostage|float
     {
         $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
 
@@ -174,7 +174,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
      *
      * @return bool
      */
-    public function handleVirtualProductDelivery()
+    public function handleVirtualProductDelivery(): bool
     {
         return false;
     }

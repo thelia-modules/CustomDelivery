@@ -81,7 +81,7 @@ class ApiListener implements EventSubscriberInterface
         $maximumDeliveryDate = ''; // TODO (calculate delivery date from day of order
 
         /** @var DeliveryModuleOption $deliveryModuleOption */
-        $deliveryModuleOption = $this->container->get('open_api.model.factory')->buildModel('DeliveryModuleOption');
+        $deliveryModuleOption = new DeliveryModuleOption();
         $deliveryModuleOption
             ->setCode(CustomDelivery::getModuleCode())
             ->setValid($isValid)

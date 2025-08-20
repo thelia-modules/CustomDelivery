@@ -16,6 +16,7 @@ use CustomDelivery\Model\CustomDeliverySlice;
 use CustomDelivery\Model\CustomDeliverySliceQuery;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Thelia\Core\Translation\Translator;
 use Thelia\Install\Database;
 use Thelia\Model\Base\TaxRuleQuery;
@@ -284,5 +285,18 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
         $locale = $this->getRequest()->getSession()->getLang()->getLocale();
 
         return $this->buildOrderPostage($untaxedPostage, $country, $locale, $config['tax']);
+    }
+
+    /**
+     * Defines how services are loaded in your modules
+     *
+     * @param ServicesConfigurator $servicesConfigurator
+     */
+    public static function configureServices(ServicesConfigurator $servicesConfigurator): void
+    {
+        $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
+            ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
+            ->autowire(true)
+            ->autoconfigure(true);
     }
 }

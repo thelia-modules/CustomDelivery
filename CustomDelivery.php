@@ -18,7 +18,7 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Thelia\Core\Translation\Translator;
-use Thelia\Install\Database;
+use Thelia\Core\Install\Database;
 use Thelia\Model\Base\TaxRuleQuery;
 use Thelia\Model\Cart;
 use Thelia\Model\ConfigQuery;

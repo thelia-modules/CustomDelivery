@@ -77,7 +77,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {loop type="custom-delivery-slice" name="custom-delivery-slice" area_id=$area_id order="weight_max,price_max" }
+                                {loop type="custom_delivery_slice_loop" name="custom-delivery-slice" area_id=$area_id order="weight_max,price_max" }
                                     <tr class="js-slice" data-area="{$area_id}" data-id="{$ID}">
                                         {if $method != 2}
                                         <th class="col-md-3">

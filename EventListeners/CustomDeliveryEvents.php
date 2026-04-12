@@ -60,7 +60,7 @@ class CustomDeliveryEvents implements EventSubscriberInterface
      *
      * @api
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             TheliaEvents::ORDER_UPDATE_STATUS => ["updateStatus", 128]

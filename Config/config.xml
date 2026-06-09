@@ -8,31 +8,4 @@
         <loop name="custom-delivery-slice" class="CustomDelivery\Loop\CustomDeliverySliceLoop" />
     </loops>
 
-    <forms>
-        <form name="customdelivery.configuration.form" class="CustomDelivery\Form\ConfigurationForm" />
-        <form name="customdelivery.slice.form" class="CustomDelivery\Form\SliceForm" />
-    </forms>
-
-    <services>
-        <service id="customdelivery.events" class="CustomDelivery\EventListeners\CustomDeliveryEvents" scope="request">
-            <argument type="service" id="thelia.parser" />
-            <argument type="service" id="mailer"/>
-
-            <tag name="kernel.event_subscriber"/>
-        </service>
-        <service id="customdelivery.openapi" class="CustomDelivery\EventListeners\ApiListener" scope="request">
-            <argument type="service" id="service_container"/>
-            <argument type="service" id="request_stack"/>
-            <tag name="kernel.event_subscriber"/>
-        </service>
-    </services>
-
-    <hooks>
-        <hook id="customdelivery.hook" class="CustomDelivery\Hook\HookManager" scope="request">
-            <!-- Back -->
-            <tag name="hook.event_listener" event="module.configuration" type="back" />
-            <tag name="hook.event_listener" event="module.config-js" type="back" />
-        </hook>
-    </hooks>
-
 </config>

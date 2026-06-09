@@ -32,7 +32,7 @@ class SliceForm extends BaseForm
      */
     public static function getName(): string
     {
-        return "customdelivery-configuration-form";
+        return "customdelivery-slice-form";
     }
 
     protected function buildForm()

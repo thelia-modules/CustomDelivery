@@ -14,6 +14,7 @@
 namespace CustomDelivery\Controller;
 
 use CustomDelivery\CustomDelivery;
+use CustomDelivery\Form\ConfigurationForm;
 use CustomDelivery\Model\CustomDeliverySlice;
 use CustomDelivery\Model\CustomDeliverySliceQuery;
 use Propel\Runtime\Map\TableMap;
@@ -64,13 +65,13 @@ class BackController extends BaseAdminController
         $config = CustomDelivery::getConfig();
 
         try {
-            if (0 !== $id = (int)$request->get('id', 0)) {
+            if (0 !== $id = (int)$request->request->get('id', 0)) {
                 $slice = CustomDeliverySliceQuery::create()->findPk($id);
             } else {
                 $slice = new CustomDeliverySlice();
             }
 
-            if (0 !== $areaId = (int)$request->get('area', 0)) {
+            if (0 !== $areaId = (int)$request->request->get('area', 0)) {
                 $slice->setAreaId($areaId);
             } else {
                 $messages[] = Translator::getInstance()->trans(
@@ -81,7 +82,7 @@ class BackController extends BaseAdminController
             }
 
             if ($config['method'] !== CustomDelivery::METHOD_WEIGHT) {
-                $priceMax = $this->getFloatVal($request->get('priceMax', 0));
+                $priceMax = $this->getFloatVal($request->request->get('priceMax', 0));
                 if (0 < $priceMax) {
                     $slice->setPriceMax($priceMax);
                 } else {
@@ -94,7 +95,7 @@ class BackController extends BaseAdminController
             }
 
             if ($config['method'] !== CustomDelivery::METHOD_PRICE) {
-                $weightMax = $this->getFloatVal($request->get('weightMax', 0));
+                $weightMax = $this->getFloatVal($request->request->get('weightMax', 0));
                 if (0 < $weightMax) {
                     $slice->setWeightMax($weightMax);
                 } else {
@@ -106,7 +107,7 @@ class BackController extends BaseAdminController
                 }
             }
 
-            $price = $this->getFloatVal($request->get('price', 0));
+            $price = $this->getFloatVal($request->request->get('price', 0));
             if (0 <= $price) {
                 $slice->setPrice($price);
             } else {
@@ -170,7 +171,7 @@ class BackController extends BaseAdminController
         $response = null;
 
         try {
-            if (0 !== $id = (int)$request->get('id', 0)) {
+            if (0 !== $id = (int)$request->request->get('id', 0)) {
                 $slice = CustomDeliverySliceQuery::create()->findPk($id);
                 $slice->delete();
                 $responseData['success'] = true;
@@ -202,7 +203,7 @@ class BackController extends BaseAdminController
             return $response;
         }
 
-        $form = $this->createForm('customdelivery.configuration.form');
+        $form = $this->createForm(ConfigurationForm::getName());
         $message = "";
 
         $response = null;

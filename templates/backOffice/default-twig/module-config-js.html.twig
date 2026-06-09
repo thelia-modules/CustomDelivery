@@ -1,0 +1,126 @@
+<script>
+(function () {
+    'use strict';
+
+    var config = {
+        urlAdd: '{{ path('customdelivery.admin.update') }}',
+        urlDelete: '{{ path('customdelivery.admin.delete') }}',
+        urlSave: '{{ path('customdelivery.admin.update') }}'
+    };
+
+    function showMessage(message) {
+        var modalEl = document.getElementById('custom_delivery_dialog');
+        if (!modalEl) return;
+        modalEl.querySelector('.modal-body').innerHTML = message;
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    function getSliceData(row) {
+        return {
+            id: row.dataset.id || '0',
+            area: row.dataset.area || '0',
+            price: (row.querySelector('.js-slice-price') || {value: ''}).value,
+            priceMax: (row.querySelector('.js-slice-price-max') || {value: ''}).value,
+            weightMax: (row.querySelector('.js-slice-weight-max') || {value: ''}).value
+        };
+    }
+
+    function buildSliceRow(slice) {
+        var tpl = document.getElementById('tpl-slice');
+        if (!tpl) return null;
+        var node = tpl.content.cloneNode(true);
+        var tr = node.querySelector('tr');
+        tr.dataset.area = slice.areaId;
+        tr.dataset.id = slice.id;
+
+        var priceMaxInput = tr.querySelector('.js-slice-price-max');
+        if (priceMaxInput) { priceMaxInput.value = slice.priceMax; priceMaxInput.dataset.old = slice.priceMax; }
+
+        var weightMaxInput = tr.querySelector('.js-slice-weight-max');
+        if (weightMaxInput) { weightMaxInput.value = slice.weightMax; weightMaxInput.dataset.old = slice.weightMax; }
+
+        var priceInput = tr.querySelector('.js-slice-price');
+        if (priceInput) { priceInput.value = slice.price; priceInput.dataset.old = slice.price; }
+
+        var deleteBtn = tr.querySelector('.js-slice-delete');
+        if (deleteBtn) { deleteBtn.dataset.id = slice.id; }
+
+        return tr;
+    }
+
+    function postData(url, data) {
+        var params = new URLSearchParams(data);
+        return fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
+            body: params.toString()
+        }).then(function (r) { return r.json(); });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var slicesContainer = document.getElementById('slices');
+        if (!slicesContainer) return;
+
+        // Add new slice
+        slicesContainer.addEventListener('click', function (e) {
+            var addBtn = e.target.closest('.js-slice-add');
+            if (!addBtn) return;
+            e.preventDefault();
+            var row = addBtn.closest('tr');
+            var data = getSliceData(row);
+            postData(config.urlAdd, data).then(function (res) {
+                if (res.success) {
+                    row.querySelectorAll('input').forEach(function (i) { i.value = ''; });
+                    var newRow = buildSliceRow(res.slice);
+                    if (newRow) row.parentNode.insertBefore(newRow, row);
+                } else {
+                    showMessage(Array.isArray(res.message) ? res.message.join('<br>') : res.message);
+                }
+            }).catch(function (err) { showMessage(err.toString()); });
+        });
+
+        // Save existing slice
+        slicesContainer.addEventListener('click', function (e) {
+            var saveBtn = e.target.closest('.js-slice-save');
+            if (!saveBtn) return;
+            e.preventDefault();
+            var row = saveBtn.closest('tr');
+            var data = getSliceData(row);
+            postData(config.urlSave, data).then(function (res) {
+                if (res.success) {
+                    var newRow = buildSliceRow(res.slice);
+                    if (newRow) {
+                        row.parentNode.insertBefore(newRow, row);
+                        row.parentNode.removeChild(row);
+                    }
+                } else {
+                    showMessage(Array.isArray(res.message) ? res.message.join('<br>') : res.message);
+                }
+            }).catch(function (err) { showMessage(err.toString()); });
+        });
+
+        // Highlight row on input change
+        slicesContainer.addEventListener('change', function (e) {
+            if (!e.target.closest('.js-slice input')) return;
+            var saveBtn = e.target.closest('tr').querySelector('.js-slice-save');
+            if (saveBtn) saveBtn.classList.add('btn-success');
+        });
+
+        // Delete slice
+        slicesContainer.addEventListener('click', function (e) {
+            var deleteBtn = e.target.closest('.js-slice-delete');
+            if (!deleteBtn) return;
+            e.preventDefault();
+            var row = deleteBtn.closest('tr');
+            var data = getSliceData(row);
+            postData(config.urlDelete, data).then(function (res) {
+                if (res.success) {
+                    row.parentNode.removeChild(row);
+                } else {
+                    showMessage(Array.isArray(res.message) ? res.message.join('<br>') : res.message);
+                }
+            }).catch(function (err) { showMessage(err.toString()); });
+        });
+    });
+}());
+</script>

@@ -21,7 +21,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Form\TheliaFormFactory;
 use Thelia\Core\Hook\BaseHook;
-use Thelia\Core\Template\ParserResolver;
+use Thelia\Core\Template\Parser\ParserResolver;
 use Thelia\Model\AreaQuery;
 use Thelia\Model\Base\TaxRuleQuery;
 use Thelia\Model\CurrencyQuery;

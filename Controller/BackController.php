@@ -130,7 +130,7 @@ class BackController extends BaseAdminController
                 $responseData['slice'] = $slice->toArray(TableMap::TYPE_STUDLYPHPNAME);
             }
         } catch (\Exception $e) {
-            $message[] = $e->getMessage();
+            $messages[] = $e->getMessage();
         }
 
         $responseData['message'] = $messages;

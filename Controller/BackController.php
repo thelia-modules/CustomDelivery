@@ -19,6 +19,7 @@ use CustomDelivery\Model\CustomDeliverySlice;
 use CustomDelivery\Model\CustomDeliverySliceQuery;
 use Propel\Runtime\Map\TableMap;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Security\AccessManager;
@@ -35,8 +36,6 @@ use Thelia\Tools\URL;
  */
 class BackController extends BaseAdminController
 {
-    protected string $currentRouter = 'router.customdelivery';
-
     protected bool $useFallbackTemplate = true;
 
     /**
@@ -44,6 +43,7 @@ class BackController extends BaseAdminController
      *
      * @return \Symfony\Component\HttpFoundation\Response
      */
+    #[Route('/admin/module/customdelivery/save', name: 'customdelivery.admin.update', methods: ['POST'])]
     public function saveAction(Request $request)
     {
         $response = $this->checkAuth([], ['customdelivery'], AccessManager::UPDATE);
@@ -152,6 +152,7 @@ class BackController extends BaseAdminController
      *
      * @return Response
      */
+    #[Route('/admin/module/customdelivery/delete', name: 'customdelivery.admin.delete', methods: ['POST'])]
     public function deleteAction(Request $request)
     {
         $response = $this->checkAuth([], ['customdelivery'], AccessManager::DELETE);
@@ -195,6 +196,7 @@ class BackController extends BaseAdminController
      * @param ParserContext $parserContext
      * @return \Symfony\Component\HttpFoundation\Response
      */
+    #[Route('/admin/module/customdelivery/configuration', name: 'customdelivery.admin.configuration', methods: ['POST'])]
     public function saveConfigurationAction()
     {
         $response = $this->checkAuth([AdminResources::MODULE], ['customdelivery'], AccessManager::UPDATE);

@@ -35,7 +35,7 @@ use Thelia\Module\AbstractDeliveryModuleWithState;
 use Thelia\Module\BaseModule;
 use Thelia\Module\DeliveryModuleInterface;
 use Thelia\Module\Exception\DeliveryException;
-use Thelia\TaxEngine\Calculator;
+use Thelia\Domain\Taxation\TaxEngine\Calculator;
 use Thelia\Tools\I18n;
 
 class CustomDelivery extends AbstractDeliveryModuleWithState
@@ -73,7 +73,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
         return $config;
     }
 
-    public function postActivation(ConnectionInterface $con = null): void
+    public function postActivation(?ConnectionInterface $con = null): void
     {
         if (!$this->getConfigValue('is_initialized', false)) {
             $database = new Database($con);
@@ -135,7 +135,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
      *
      * @return boolean
      */
-    public function isValidDelivery(Country $country, State $state = null): bool
+    public function isValidDelivery(Country $country, ?State $state = null): bool
     {
         // Retrieve the cart
         $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
@@ -155,7 +155,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
      * @return OrderPostage             the delivery price
      * @throws DeliveryException if the postage price cannot be calculated.
      */
-    public function getPostage(Country $country, State $state = null): OrderPostage|float
+    public function getPostage(Country $country, ?State $state = null): OrderPostage|float
     {
         $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
 
@@ -205,7 +205,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
      * @param State $state
      * @return OrderPostage|null
      */
-    protected function getSlicePostage(Cart $cart, Country $country, State $state = null)
+    protected function getSlicePostage(Cart $cart, Country $country, ?State $state = null)
     {
         $config = self::getConfig();
         $currency = $cart->getCurrency();

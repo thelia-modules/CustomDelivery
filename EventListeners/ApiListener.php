@@ -22,6 +22,9 @@ use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\Base\ModuleQuery;
+use Thelia\Model\ConfigQuery;
+use Thelia\Model\Lang;
+use Thelia\Model\Module;
 use Thelia\Model\OrderPostage;
 use Thelia\Module\Exception\DeliveryException;
 
@@ -60,6 +63,10 @@ class ApiListener implements EventSubscriberInterface
             ->findOne()
             ?->setLocale($locale);
 
+        if (null === $propelModule) {
+            return;
+        }
+
         try {
             $module = $propelModule->getModuleInstance($this->container);
             $country = $deliveryModuleOptionEvent->getCountry();
@@ -85,7 +92,7 @@ class ApiListener implements EventSubscriberInterface
         $deliveryModuleOption
             ->setCode(CustomDelivery::getModuleCode())
             ->setValid($isValid)
-            ->setTitle($propelModule->getTitle())
+            ->setTitle($this->resolveModuleTitle($propelModule, $locale))
             ->setImage('')
             ->setMinimumDeliveryDate($minimumDeliveryDate)
             ->setMaximumDeliveryDate($maximumDeliveryDate)
@@ -95,6 +102,46 @@ class ApiListener implements EventSubscriberInterface
         ;
 
         $deliveryModuleOptionEvent->appendDeliveryModuleOptions($deliveryModuleOption);
+    }
+
+    /**
+     * DeliveryModuleOption::setTitle() takes a string, and Propel returns null for a
+     * locale the module has no module_i18n row for, so an untranslated module would
+     * otherwise throw a TypeError and take the whole checkout page down.
+     *
+     * Falling back to the default language mirrors what the core does in
+     * ResourceService::formatI18ns(): the back office "If a translation is missing or
+     * incomplete" setting decides. Delivery module options are exposed on the front
+     * only, so the admin exclusion that applies there has no equivalent here.
+     */
+    private function resolveModuleTitle(Module $module, string $locale): string
+    {
+        $title = $module->setLocale($locale)->getTitle();
+
+        // Explicit emptiness test rather than ?: — "0" is a legitimate title
+        // and must not count as a missing translation.
+        if (null !== $title && '' !== $title) {
+            return $title;
+        }
+
+        $fallbackLocale = $this->fallbackLocale($locale);
+
+        if (null !== $fallbackLocale) {
+            $title = $module->setLocale($fallbackLocale)->getTitle();
+        }
+
+        return $title ?? '';
+    }
+
+    private function fallbackLocale(string $currentLocale): ?string
+    {
+        if (Lang::REPLACE_BY_DEFAULT_LANGUAGE !== (int) ConfigQuery::getDefaultLangWhenNoTranslationAvailable()) {
+            return null;
+        }
+
+        $defaultLocale = Lang::getDefaultLanguage()->getLocale();
+
+        return $defaultLocale === $currentLocale ? null : $defaultLocale;
     }
 
     public static function getSubscribedEvents(): array

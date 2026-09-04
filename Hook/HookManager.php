@@ -123,7 +123,7 @@ class HookManager extends BaseHook
 
         $event->add(
             $this->render(
-                'module-configuration.html.twig',
+                'CustomDelivery/module-configuration.html.twig',
                 [
                     'form' => $form->createView()->getView(),
                     'module_id' => $moduleId,
@@ -139,7 +139,7 @@ class HookManager extends BaseHook
     public function onModuleConfigJs(HookRenderEvent $event): void
     {
         $event->add(
-            $this->render('module-config-js.html.twig')
+            $this->render('CustomDelivery/module-config-js.html.twig')
         );
     }
 }

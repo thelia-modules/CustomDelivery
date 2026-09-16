@@ -56,7 +56,7 @@ class SliceForm extends BaseForm
                 [
                     'constraints' => [
                         new NotBlank(),
-                        new GreaterThanOrEqual(['value' => 0])
+                        new GreaterThanOrEqual(value: 0)
                     ],
                     'label' => $this->trans("Area"),
                 ]
@@ -67,7 +67,7 @@ class SliceForm extends BaseForm
                 [
                     'constraints' => [
                         new NotBlank(),
-                        new GreaterThanOrEqual(['value' => 0])
+                        new GreaterThanOrEqual(value: 0)
                     ],
                     'label' => $this->trans("Area"),
                 ]
@@ -78,7 +78,7 @@ class SliceForm extends BaseForm
                 [
                     'constraints' => [
                         new NotBlank(),
-                        new GreaterThanOrEqual(['value' => 0])
+                        new GreaterThanOrEqual(value: 0)
                     ],
                     'label' => $this->trans("Area"),
                 ]

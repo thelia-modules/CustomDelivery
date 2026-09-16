@@ -84,7 +84,7 @@ class ConfigurationForm extends BaseForm
                 [
                     'constraints' => [
                         new NotBlank(),
-                        new GreaterThanOrEqual(['value' => 0])
+                        new GreaterThanOrEqual(value: 0)
                     ],
                     "choices" => [
                         $this->trans("Price and weight") => CustomDelivery::METHOD_PRICE_WEIGHT,

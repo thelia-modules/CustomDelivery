@@ -19,6 +19,6 @@ return array(
     'The weight max value is not valid' => 'La valeur du poids max n\'est pas valide',
     'Tracking URL' => 'URL de suivi',
     'Weight' => 'Poids',
-    'Your order {$order_ref} has been shipped' => 'Votre commande {$order_ref} vient d\'être expédiée',
+    'Your order {{ order_ref }} has been shipped' => 'Votre commande {{ order_ref }} vient d\'être expédiée',
     'Your slice has been saved' => 'Votre tranche a été sauvegardé',
 );

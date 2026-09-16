@@ -19,6 +19,8 @@ use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Thelia\Core\Translation\Translator;
 use Thelia\Core\Install\Database;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 use Thelia\Model\Base\TaxRuleQuery;
 use Thelia\Model\Cart;
 use Thelia\Model\ConfigQuery;
@@ -73,6 +75,24 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
         return $config;
     }
 
+    public function update($currentVersion, $newVersion, ?ConnectionInterface $con = null): void
+    {
+        $finder = Finder::create()
+            ->name('*.sql')
+            ->depth(0)
+            ->sortByName()
+            ->in(__DIR__.'/Config/update');
+
+        $database = new Database($con);
+
+        /** @var SplFileInfo $file */
+        foreach ($finder as $file) {
+            if (version_compare($currentVersion, $file->getBasename('.sql'), '<')) {
+                $database->insertSql(null, [$file->getPathname()]);
+            }
+        }
+    }
+
     public function postActivation(?ConnectionInterface $con = null): void
     {
         if (!$this->getConfigValue('is_initialized', false)) {
@@ -115,7 +135,7 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
                     $this->trans('Custom delivery shipping message', [], $locale)
                 );
                 $message->setSubject(
-                    $this->trans('Your order {$order_ref} has been shipped', [], $locale)
+                    $this->trans('Your order {{ order_ref }} has been shipped', [], $locale)
                 );
             }
 

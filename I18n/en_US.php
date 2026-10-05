@@ -3,7 +3,9 @@
 return array(
     'Area' => 'Area',
     'Custom delivery shipping message' => 'Custom delivery shipping message',
+    'From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link. Tick this only to keep the module\'s e-mail during a transition: the customer would then receive both.' => 'From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link. Tick this only to keep the module\'s e-mail during a transition: the customer would then receive both.',
     'Id' => 'Id',
+    'Keep sending the Custom Delivery shipping e-mail' => 'Keep sending the Custom Delivery shipping e-mail',
     'Method' => 'Method',
     'Price' => 'Price',
     'Price and weight' => 'Price and weight',
@@ -15,6 +17,7 @@ return array(
     'The price value is not valid' => 'The price value is not valid',
     'The slice has not been deleted' => 'The slice has not been deleted',
     'The tax rule used to calculate postage taxes.' => 'The tax rule used to calculate postage taxes.',
+    'The tracking URL must start with http:// or https:// and contain %ID%.' => 'The tracking URL must start with http:// or https:// and contain %ID%.',
     'The tracking URL. %ID% will be replaced by the tracking number entered in the order' => 'The tracking URL. %ID% will be replaced by the tracking number entered in the order',
     'The weight max value is not valid' => 'The weight max value is not valid',
     'Tracking URL' => 'Tracking URL',

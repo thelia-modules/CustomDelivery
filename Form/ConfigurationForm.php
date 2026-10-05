@@ -14,6 +14,7 @@
 namespace CustomDelivery\Form;
 
 use CustomDelivery\CustomDelivery;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Validator\Constraints\Callback;
@@ -47,6 +48,25 @@ class ConfigurationForm extends BaseForm
     }
 
     /**
+     * The address ends up as a link in front of the customer: anything but an http(s)
+     * address carrying %ID% is refused. Empty means the carrier has no tracking page.
+     */
+    public function checkTrackingUrl($value, ExecutionContextInterface $context)
+    {
+        $value = trim((string) $value);
+
+        if ('' === $value) {
+            return;
+        }
+
+        if (!str_contains($value, '%ID%') || 1 !== preg_match('#^https?://[^\s/?\#@]+(?:[/?\#]\S*)?$#i', $value)) {
+            $context->addViolation(
+                $this->trans('The tracking URL must start with http:// or https:// and contain %ID%.')
+            );
+        }
+    }
+
+    /**
      * @return string the name of you form. This name must be unique
      */
     public static function getName(): string
@@ -65,8 +85,9 @@ class ConfigurationForm extends BaseForm
                 "url",
                 TextType::class,
                 [
+                    'required' => false,
                     'constraints' => [
-                        new NotBlank()
+                        new Callback([$this, 'checkTrackingUrl'])
                     ],
                     'data' => $config['url'],
                     'label' => $this->trans("Tracking URL"),
@@ -119,6 +140,18 @@ class ConfigurationForm extends BaseForm
                             "The tax rule used to calculate postage taxes."
                         )
                     ],
+                ]
+            )
+            ->add(
+                "send_own_shipping_email",
+                CheckboxType::class,
+                [
+                    'required' => false,
+                    'data' => $config['send_own_shipping_email'],
+                    'label' => $this->trans("Keep sending the Custom Delivery shipping e-mail"),
+                    'help' => $this->trans(
+                        "From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link. Tick this only to keep the module's e-mail during a transition: the customer would then receive both."
+                    ),
                 ]
             );
     }

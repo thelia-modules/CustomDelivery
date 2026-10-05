@@ -32,6 +32,7 @@ use Thelia\Model\LangQuery;
 use Thelia\Model\Map\CountryAreaTableMap;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
+use Thelia\Model\ModuleConfigQuery;
 use Thelia\Model\OrderPostage;
 use Thelia\Model\State;
 use Thelia\Module\AbstractDeliveryModuleWithState;
@@ -50,6 +51,21 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
     const CONFIG_TAX_RULE_ID = 'custom_delivery_taxe_rule';
 
     const DEFAULT_TRACKING_URL = '%ID%';
+
+    /**
+     * Where the core reads the tracking address of a delivery module (see the parcel
+     * tracking link of Thelia 3.3). Written as a string so the module keeps loading on
+     * an older core.
+     */
+    const CORE_TRACKING_URL_KEY = 'tracking_url';
+
+    /**
+     * Transition switch: keep sending the module's own shipping e-mail even when the
+     * core sends its own. Off by default.
+     */
+    const CONFIG_SEND_OWN_SHIPPING_EMAIL = 'send_own_shipping_email';
+
+    const CORE_SHIPPING_EMAIL_LISTENER = 'Thelia\\Domain\\Order\\EventListener\\SendShippingEmailListener';
     const DEFAULT_PICKING_METHOD = 0;
 
     const METHOD_PRICE_WEIGHT = 0;
@@ -62,9 +78,8 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
     public static function getConfig()
     {
         $config = [
-            'url' => (
-            ConfigQuery::read(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL)
-            ),
+            'url' => self::getTrackingUrlTemplate(),
+            'send_own_shipping_email' => self::keepsItsOwnShippingEmail(),
             'method' => (
             intval(ConfigQuery::read(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD))
             ),
@@ -74,6 +89,79 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
         ];
 
         return $config;
+    }
+
+    /**
+     * The tracking address template, where %ID% stands for the tracking number. Read
+     * under the core key first; the historical global setting is only a fallback for
+     * a shop that has not run the 4.1 update yet. Its old default, "%ID%" alone, is no
+     * address and reads as empty.
+     */
+    public static function getTrackingUrlTemplate(): string
+    {
+        $template = trim((string) self::getConfigValue(self::CORE_TRACKING_URL_KEY, ''));
+
+        if ('' === $template) {
+            $template = trim((string) ConfigQuery::read(self::CONFIG_TRACKING_URL, ''));
+        }
+
+        return self::DEFAULT_TRACKING_URL === $template ? '' : $template;
+    }
+
+    /**
+     * Saves the template under the core key, so the core builds the link shown in the
+     * customer account, the back office and the shipping e-mail, and in the historical
+     * setting the module's own e-mail reads on an older core.
+     */
+    public static function saveTrackingUrlTemplate(string $template): void
+    {
+        $template = trim($template);
+
+        if ('' === $template) {
+            ModuleConfigQuery::create()->deleteConfigValue(self::getModuleId(), self::CORE_TRACKING_URL_KEY);
+        } else {
+            self::setConfigValue(self::CORE_TRACKING_URL_KEY, $template);
+        }
+
+        ConfigQuery::write(self::CONFIG_TRACKING_URL, '' === $template ? self::DEFAULT_TRACKING_URL : $template);
+    }
+
+    public static function keepsItsOwnShippingEmail(): bool
+    {
+        return '1' === (string) self::getConfigValue(self::CONFIG_SEND_OWN_SHIPPING_EMAIL, '0');
+    }
+
+    /**
+     * Whether the core tells the customer their order has left: from Thelia 3.3, unless
+     * the merchant switched that e-mail off or the shop has no such message.
+     */
+    public static function coreSendsTheShippingEmail(): bool
+    {
+        if (!class_exists(self::CORE_SHIPPING_EMAIL_LISTENER)) {
+            return false;
+        }
+
+        $listener = self::CORE_SHIPPING_EMAIL_LISTENER;
+
+        return $listener::isEnabled()
+            && null !== MessageQuery::create()->findOneByName($listener::MESSAGE_CODE);
+    }
+
+    /**
+     * Copies the historical global setting under the core key, once, so a shop that
+     * updates keeps its tracking address without typing it again.
+     */
+    private static function moveTrackingUrlUnderTheCoreKey(): void
+    {
+        if ('' !== trim((string) self::getConfigValue(self::CORE_TRACKING_URL_KEY, ''))) {
+            return;
+        }
+
+        $legacy = trim((string) ConfigQuery::read(self::CONFIG_TRACKING_URL, ''));
+
+        if ('' !== $legacy && self::DEFAULT_TRACKING_URL !== $legacy) {
+            self::setConfigValue(self::CORE_TRACKING_URL_KEY, $legacy);
+        }
     }
 
     public function update($currentVersion, $newVersion, ?ConnectionInterface $con = null): void
@@ -91,6 +179,10 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
             if (version_compare($currentVersion, $file->getBasename('.sql'), '<')) {
                 $database->insertSql(null, [$file->getPathname()]);
             }
+        }
+
+        if (version_compare($currentVersion, '4.1.0', '<')) {
+            self::moveTrackingUrlUnderTheCoreKey();
         }
     }
 
@@ -123,6 +215,8 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
         if (null === ConfigQuery::read(self::CONFIG_PICKING_METHOD, null)) {
             ConfigQuery::write(self::CONFIG_PICKING_METHOD, self::DEFAULT_PICKING_METHOD);
         }
+
+        self::moveTrackingUrlUnderTheCoreKey();
 
         // create new message
         if (null === MessageQuery::create()->findOneByName('mail_custom_delivery')) {

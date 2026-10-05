@@ -214,9 +214,10 @@ class BackController extends BaseAdminController
             $vform = $this->validateForm($form);
             $data = $vform->getData();
 
-            ConfigQuery::write(
-                CustomDelivery::CONFIG_TRACKING_URL,
-                $data['url']
+            CustomDelivery::saveTrackingUrlTemplate((string) $data['url']);
+            CustomDelivery::setConfigValue(
+                CustomDelivery::CONFIG_SEND_OWN_SHIPPING_EMAIL,
+                empty($data['send_own_shipping_email']) ? '0' : '1'
             );
             ConfigQuery::write(
                 CustomDelivery::CONFIG_PICKING_METHOD,

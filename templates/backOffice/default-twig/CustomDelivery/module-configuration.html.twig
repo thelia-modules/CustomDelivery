@@ -50,6 +50,14 @@
             {{ form_errors(form.tax) }}
         </div>
 
+        <div class="form-check mb-3">
+            {{ form_widget(form.send_own_shipping_email, {attr: {class: 'form-check-input'}}) }}
+            {{ form_label(form.send_own_shipping_email, null, {label_attr: {class: 'form-check-label'}}) }}
+            {% if form.send_own_shipping_email.vars.help is defined and form.send_own_shipping_email.vars.help %}
+                <div class="form-text">{{ form.send_own_shipping_email.vars.help }}</div>
+            {% endif %}
+        </div>
+
         <button type="submit" id="vpg-save" name="customdelivery_save" value="save"
                 class="btn btn-primary btn-sm"
                 title="{{ 'Save'|trans({}, 'customdelivery.bo.default') }}">

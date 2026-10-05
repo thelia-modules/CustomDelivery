@@ -3,7 +3,9 @@
 return array(
     'Area' => 'Zone',
     'Custom delivery shipping message' => 'Message d\'envoi pour la livraison personnalisée',
+    'From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link. Tick this only to keep the module\'s e-mail during a transition: the customer would then receive both.' => 'Depuis Thelia 3.3, la boutique envoie elle-même l\'e-mail d\'expédition, avec le lien de suivi. Ne cochez cette case que pour garder l\'e-mail du module le temps d\'une transition : le client recevrait alors les deux.',
     'Id' => 'Id',
+    'Keep sending the Custom Delivery shipping e-mail' => 'Continuer à envoyer l\'e-mail d\'expédition de Livraison personnalisée',
     'Method' => 'Méthode',
     'Price' => 'Prix',
     'Price and weight' => 'Prix et poids',
@@ -15,6 +17,7 @@ return array(
     'The price value is not valid' => 'La valeur du prix n\'est pas valide',
     'The slice has not been deleted' => 'Votre tranche n\'a pas été supprimé',
     'The tax rule used to calculate postage taxes.' => 'La règle de taxe utilisée pour calculer les taxes associés à la livraison.',
+    'The tracking URL must start with http:// or https:// and contain %ID%.' => 'L\'URL de suivi doit commencer par http:// ou https:// et contenir %ID%.',
     'The tracking URL. %ID% will be replaced by the tracking number entered in the order' => 'L\'URL de suivi. %ID% sera remplacé par le numéro de suivi saisi dans la commande',
     'The weight max value is not valid' => 'La valeur du poids max n\'est pas valide',
     'Tracking URL' => 'URL de suivi',

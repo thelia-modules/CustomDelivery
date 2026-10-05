@@ -22,6 +22,7 @@ use Thelia\Log\Tlog;
 use Thelia\Mailer\MailerFactory;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\MessageQuery;
+use Thelia\Model\OrderStatusQuery;
 
 /**
  * Class CustomDeliveryEvents
@@ -41,87 +42,97 @@ class CustomDeliveryEvents implements EventSubscriberInterface
     }
 
     /**
-     * Returns an array of event names this subscriber wants to listen to.
-     *
-     * The array keys are event names and the value can be:
-     *
-     *  * The method name to call (priority defaults to 0)
-     *  * An array composed of the method name to call and the priority
-     *  * An array of arrays composed of the method names to call and respective
-     *    priorities, or 0 if unset
-     *
-     * For instance:
-     *
-     *  * array('eventName' => 'methodName')
-     *  * array('eventName' => array('methodName', $priority))
-     *  * array('eventName' => array(array('methodName1', $priority), array('methodName2'))
-     *
-     * @return array The event names to listen to
-     *
-     * @api
+     * At 32, after Thelia\Action\Order (128) has written the new status, so the order
+     * already carries it and the event knows the status it left.
      */
     public static function getSubscribedEvents(): array
     {
         return [
-            TheliaEvents::ORDER_UPDATE_STATUS => ["updateStatus", 128]
+            TheliaEvents::ORDER_UPDATE_STATUS => ["updateStatus", 32]
         ];
     }
 
+    /**
+     * Sends the module's own shipping message when an order shipped by this module
+     * enters the "sent" status. From Thelia 3.3 the core sends its own shipping e-mail
+     * for every carrier: the module then stays quiet, unless the merchant keeps its
+     * message through the transition switch of the configuration page.
+     */
     public function updateStatus(OrderEvent $event)
     {
         $order = $event->getOrder();
         $customDelivery = new CustomDelivery();
 
-        if ($order->isSent() && $order->getDeliveryModuleId() == $customDelivery->getModuleModel()->getId()) {
-            $contactEmail = ConfigQuery::getStoreEmail();
-
-            if ($contactEmail) {
-
-                $message = MessageQuery::create()
-                    ->filterByName('mail_custom_delivery')
-                    ->findOne();
-
-                if (false === $message) {
-                    throw new \Exception("Failed to load message 'mail_custom_delivery'.");
-                }
-
-                $order = $event->getOrder();
-                $customer = $order->getCustomer();
-                $package = $order->getDeliveryRef();
-                $trackingUrl = null;
-
-                if (!empty($package)) {
-                    $config = CustomDelivery::getConfig();
-                    $trackingUrl = $config['url'];
-                    if (!empty($trackingUrl)) {
-                        $trackingUrl = str_replace('%ID%', $package, $trackingUrl);
-                    }
-                }
-
-                $this->mailer->sendEmailMessage(
-                    'mail_custom_delivery',
-                    [$contactEmail => ConfigQuery::getStoreName()],
-                    [$customer->getEmail() => $customer->getFirstname() . " " . $customer->getLastname()],
-                    [
-                        'customer_id' => $customer->getId(),
-                        'order_id' => $order->getId(),
-                        'order_ref' => $order->getRef(),
-                        'order_date' => $order->getCreatedAt(),
-                        'update_date' => $order->getUpdatedAt(),
-                        'package' => $package,
-                        'tracking_url' => $trackingUrl
-                    ]
-                );
-
-                Tlog::getInstance()->debug(
-                    "Custom Delivery shipping message sent to customer " . $customer->getEmail()
-                );
-            } else {
-                $customer = $order->getCustomer();
-                Tlog::getInstance()->debug(
-                    "Custom Delivery shipping message no contact email customer_id ".$customer->getId()
-                );
-            }
+        if (!$order->isSent() || $order->getDeliveryModuleId() != $customDelivery->getModuleModel()->getId()) {
+            return;
         }
+
+        if ($this->wasAlreadySent($event)) {
+            return;
+        }
+
+        if (CustomDelivery::coreSendsTheShippingEmail() && !CustomDelivery::keepsItsOwnShippingEmail()) {
+            return;
+        }
+
+        $customer = $order->getCustomer();
+        $contactEmail = ConfigQuery::getStoreEmail();
+
+        if (!$contactEmail) {
+            Tlog::getInstance()->debug(
+                "Custom Delivery shipping message no contact email customer_id ".$customer->getId()
+            );
+
+            return;
+        }
+
+        if (null === MessageQuery::create()->filterByName('mail_custom_delivery')->findOne()) {
+            throw new \Exception("Failed to load message 'mail_custom_delivery'.");
+        }
+
+        $package = $order->getDeliveryRef();
+        $trackingUrl = null;
+
+        if (!empty($package)) {
+            $template = CustomDelivery::getTrackingUrlTemplate();
+            $trackingUrl = '' === $template ? $package : str_replace('%ID%', rawurlencode((string) $package), $template);
+        }
+
+        $this->mailer->sendEmailMessage(
+            'mail_custom_delivery',
+            [$contactEmail => ConfigQuery::getStoreName()],
+            [$customer->getEmail() => $customer->getFirstname() . " " . $customer->getLastname()],
+            [
+                'customer_id' => $customer->getId(),
+                'order_id' => $order->getId(),
+                'order_ref' => $order->getRef(),
+                'order_date' => $order->getCreatedAt(),
+                'update_date' => $order->getUpdatedAt(),
+                'package' => $package,
+                'tracking_url' => $trackingUrl
+            ]
+        );
+
+        Tlog::getInstance()->debug(
+            "Custom Delivery shipping message sent to customer " . $customer->getEmail()
+        );
+    }
+
+    /**
+     * Saving an order that is already sent, or moving it between two statuses that
+     * both mean sent, must not mail the customer again. The previous status is known
+     * to the event from Thelia 3.2; on an older core every update is taken as an entry.
+     */
+    private function wasAlreadySent(OrderEvent $event): bool
+    {
+        if (!method_exists($event, 'getPreviousStatusId') || null === $event->getPreviousStatusId()) {
+            return false;
+        }
+
+        if ($event->getPreviousStatusId() === $event->getStatus()) {
+            return true;
+        }
+
+        return true === OrderStatusQuery::create()->findPk($event->getPreviousStatusId())?->isSent();
     }
 }

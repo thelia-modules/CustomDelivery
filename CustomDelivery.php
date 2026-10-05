@@ -60,12 +60,14 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
     const CORE_TRACKING_URL_KEY = 'tracking_url';
 
     /**
-     * Transition switch: keep sending the module's own shipping e-mail even when the
-     * core sends its own. Off by default.
+     * Transition switch: keep sending the module's own shipping e-mail on a core that
+     * sends its own. Off by default.
      */
     const CONFIG_SEND_OWN_SHIPPING_EMAIL = 'send_own_shipping_email';
 
     const CORE_SHIPPING_EMAIL_LISTENER = 'Thelia\\Domain\\Order\\EventListener\\SendShippingEmailListener';
+
+    const CORE_TRACKING_URL_RESOLVER = 'Thelia\\Domain\\Order\\Service\\OrderTrackingUrlResolver';
     const DEFAULT_PICKING_METHOD = 0;
 
     const METHOD_PRICE_WEIGHT = 0;
@@ -92,38 +94,69 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
     }
 
     /**
-     * The tracking address template, where %ID% stands for the tracking number. Read
-     * under the core key first; the historical global setting is only a fallback for
-     * a shop that has not run the 4.1 update yet. Its old default, "%ID%" alone, is no
-     * address and reads as empty.
+     * The tracking address template, where %ID% stands for the tracking number, kept
+     * where the core reads the tracking address of a delivery module. One place only:
+     * the shipping page of the back office and this module's configuration page both
+     * edit it.
      */
     public static function getTrackingUrlTemplate(): string
     {
-        $template = trim((string) self::getConfigValue(self::CORE_TRACKING_URL_KEY, ''));
-
-        if ('' === $template) {
-            $template = trim((string) ConfigQuery::read(self::CONFIG_TRACKING_URL, ''));
-        }
-
-        return self::DEFAULT_TRACKING_URL === $template ? '' : $template;
+        return trim((string) self::getConfigValue(self::CORE_TRACKING_URL_KEY, ''));
     }
 
-    /**
-     * Saves the template under the core key, so the core builds the link shown in the
-     * customer account, the back office and the shipping e-mail, and in the historical
-     * setting the module's own e-mail reads on an older core.
-     */
     public static function saveTrackingUrlTemplate(string $template): void
     {
         $template = trim($template);
 
         if ('' === $template) {
             ModuleConfigQuery::create()->deleteConfigValue(self::getModuleId(), self::CORE_TRACKING_URL_KEY);
-        } else {
-            self::setConfigValue(self::CORE_TRACKING_URL_KEY, $template);
+
+            return;
         }
 
-        ConfigQuery::write(self::CONFIG_TRACKING_URL, '' === $template ? self::DEFAULT_TRACKING_URL : $template);
+        self::setConfigValue(self::CORE_TRACKING_URL_KEY, $template);
+    }
+
+    /**
+     * An http(s) address carrying %ID% outside the host. The core rule is used when the
+     * core has one, so the module and the core never disagree on what a valid address is.
+     */
+    public static function isValidTrackingUrlTemplate(string $template): bool
+    {
+        $template = trim($template);
+
+        if (class_exists(self::CORE_TRACKING_URL_RESOLVER)) {
+            $resolver = self::CORE_TRACKING_URL_RESOLVER;
+
+            return $resolver::isValidTemplate($template);
+        }
+
+        $authority = (string) preg_replace('#^https?://([^/?\#]*).*$#is', '$1', $template);
+
+        return str_contains($template, '%ID%')
+            && !str_contains($authority, '%ID%')
+            && 1 === preg_match('#^https?://[^\p{Z}\p{C}\\\\/?\#@]+(?:[/?\#][^\p{Z}\p{C}\\\\]*)?\z#iu', $template);
+    }
+
+    /**
+     * The tracking link of a parcel for the module's own message: the template with the
+     * url-encoded number, or the bare number when no valid template is set, as before.
+     */
+    public static function trackingUrlOf(string $trackingNumber): ?string
+    {
+        $trackingNumber = trim($trackingNumber);
+
+        if ('' === $trackingNumber) {
+            return null;
+        }
+
+        $template = self::getTrackingUrlTemplate();
+
+        if (!self::isValidTrackingUrlTemplate($template)) {
+            return $trackingNumber;
+        }
+
+        return str_replace('%ID%', rawurlencode($trackingNumber), $template);
     }
 
     public static function keepsItsOwnShippingEmail(): bool
@@ -132,36 +165,34 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
     }
 
     /**
-     * Whether the core tells the customer their order has left: from Thelia 3.3, unless
-     * the merchant switched that e-mail off or the shop has no such message.
+     * Whether the core tells the customers their order has left (Thelia 3.3 and later).
+     * The core then owns that message, switched on or off in its store configuration:
+     * the module only sends its own through the transition switch.
      */
-    public static function coreSendsTheShippingEmail(): bool
+    public static function coreHandlesTheShippingEmail(): bool
     {
-        if (!class_exists(self::CORE_SHIPPING_EMAIL_LISTENER)) {
-            return false;
-        }
-
-        $listener = self::CORE_SHIPPING_EMAIL_LISTENER;
-
-        return $listener::isEnabled()
-            && null !== MessageQuery::create()->findOneByName($listener::MESSAGE_CODE);
+        return class_exists(self::CORE_SHIPPING_EMAIL_LISTENER);
     }
 
     /**
-     * Copies the historical global setting under the core key, once, so a shop that
-     * updates keeps its tracking address without typing it again.
+     * Moves the historical global setting under the core key, once, so a shop that
+     * updates keeps its tracking address without typing it again. The global setting
+     * is put back to its old default afterwards, so an address cleared later on can
+     * never be copied back.
      */
     private static function moveTrackingUrlUnderTheCoreKey(): void
     {
-        if ('' !== trim((string) self::getConfigValue(self::CORE_TRACKING_URL_KEY, ''))) {
+        $legacy = trim((string) ConfigQuery::read(self::CONFIG_TRACKING_URL, ''));
+
+        if ('' === $legacy || self::DEFAULT_TRACKING_URL === $legacy) {
             return;
         }
 
-        $legacy = trim((string) ConfigQuery::read(self::CONFIG_TRACKING_URL, ''));
-
-        if ('' !== $legacy && self::DEFAULT_TRACKING_URL !== $legacy) {
+        if ('' === self::getTrackingUrlTemplate()) {
             self::setConfigValue(self::CORE_TRACKING_URL_KEY, $legacy);
         }
+
+        ConfigQuery::write(self::CONFIG_TRACKING_URL, self::DEFAULT_TRACKING_URL);
     }
 
     public function update($currentVersion, $newVersion, ?ConnectionInterface $con = null): void

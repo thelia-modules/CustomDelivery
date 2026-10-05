@@ -3,13 +3,16 @@
 - The tracking address is stored where Thelia reads the tracking address of a delivery module
   (module setting `tracking_url`). From Thelia 3.3 the core builds the tracking link of a Custom
   Delivery order from it, for the customer account, the back office, the order API and the
-  shipping e-mail. The update copies the existing address there; nothing has to be typed again.
-- The tracking address is optional and must be an `http(s)` address containing `%ID%`. The
-  tracking number is url-encoded into it.
-- From Thelia 3.3 the core sends its own shipping e-mail for every carrier: the module stops
-  sending `mail_custom_delivery` while that e-mail is switched on. A new setting, "Keep sending
-  the Custom Delivery shipping e-mail", keeps it during a transition. On an older core the module
-  sends its message as before.
+  shipping e-mail. The update moves the existing address there and puts the former global
+  setting `custom_delivery_tracking_url` back to its default; nothing has to be typed again.
+- The address can be edited on this module's configuration page or, from Thelia 3.3, on the
+  shipping page of the module in the back office: both edit the same setting.
+- The tracking address is optional and must be an `http(s)` address containing `%ID%` outside the
+  host. The tracking number is url-encoded into it.
+- From Thelia 3.3 the core owns the shipping e-mail of every carrier, switched on or off in the
+  store configuration: the module no longer sends `mail_custom_delivery`. A new setting, "Keep
+  sending the Custom Delivery shipping e-mail", keeps it during a transition. On an older core the
+  module sends its message as before.
 - The message is sent when an order enters the "sent" status only: saving an order that is
   already sent no longer mails the customer again. The listener runs after the status is written.
 

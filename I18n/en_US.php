@@ -3,7 +3,7 @@
 return array(
     'Area' => 'Area',
     'Custom delivery shipping message' => 'Custom delivery shipping message',
-    'From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link. Tick this only to keep the module\'s e-mail during a transition: the customer would then receive both.' => 'From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link. Tick this only to keep the module\'s e-mail during a transition: the customer would then receive both.',
+    'From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link, and the store configuration switches it on or off. Tick this only to keep the module\'s e-mail during a transition: with both switched on, the customer receives two e-mails.' => 'From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link, and the store configuration switches it on or off. Tick this only to keep the module\'s e-mail during a transition: with both switched on, the customer receives two e-mails.',
     'Id' => 'Id',
     'Keep sending the Custom Delivery shipping e-mail' => 'Keep sending the Custom Delivery shipping e-mail',
     'Method' => 'Method',

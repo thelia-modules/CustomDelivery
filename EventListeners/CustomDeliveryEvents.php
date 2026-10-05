@@ -54,9 +54,10 @@ class CustomDeliveryEvents implements EventSubscriberInterface
 
     /**
      * Sends the module's own shipping message when an order shipped by this module
-     * enters the "sent" status. From Thelia 3.3 the core sends its own shipping e-mail
-     * for every carrier: the module then stays quiet, unless the merchant keeps its
-     * message through the transition switch of the configuration page.
+     * enters the "sent" status. From Thelia 3.3 the core owns the shipping e-mail of
+     * every carrier, switched on or off in the store configuration: the module then
+     * stays quiet, unless the merchant keeps its message through the transition switch
+     * of the configuration page.
      */
     public function updateStatus(OrderEvent $event)
     {
@@ -71,7 +72,7 @@ class CustomDeliveryEvents implements EventSubscriberInterface
             return;
         }
 
-        if (CustomDelivery::coreSendsTheShippingEmail() && !CustomDelivery::keepsItsOwnShippingEmail()) {
+        if (CustomDelivery::coreHandlesTheShippingEmail() && !CustomDelivery::keepsItsOwnShippingEmail()) {
             return;
         }
 
@@ -91,12 +92,7 @@ class CustomDeliveryEvents implements EventSubscriberInterface
         }
 
         $package = $order->getDeliveryRef();
-        $trackingUrl = null;
-
-        if (!empty($package)) {
-            $template = CustomDelivery::getTrackingUrlTemplate();
-            $trackingUrl = '' === $template ? $package : str_replace('%ID%', rawurlencode((string) $package), $template);
-        }
+        $trackingUrl = CustomDelivery::trackingUrlOf((string) $package);
 
         $this->mailer->sendEmailMessage(
             'mail_custom_delivery',

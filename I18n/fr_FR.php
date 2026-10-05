@@ -3,7 +3,7 @@
 return array(
     'Area' => 'Zone',
     'Custom delivery shipping message' => 'Message d\'envoi pour la livraison personnalisée',
-    'From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link. Tick this only to keep the module\'s e-mail during a transition: the customer would then receive both.' => 'Depuis Thelia 3.3, la boutique envoie elle-même l\'e-mail d\'expédition, avec le lien de suivi. Ne cochez cette case que pour garder l\'e-mail du module le temps d\'une transition : le client recevrait alors les deux.',
+    'From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link, and the store configuration switches it on or off. Tick this only to keep the module\'s e-mail during a transition: with both switched on, the customer receives two e-mails.' => 'Depuis Thelia 3.3, la boutique envoie elle-même l\'e-mail d\'expédition, avec le lien de suivi, et la configuration de la boutique l\'active ou le coupe. Ne cochez cette case que pour garder l\'e-mail du module le temps d\'une transition : si les deux sont actifs, le client reçoit deux e-mails.',
     'Id' => 'Id',
     'Keep sending the Custom Delivery shipping e-mail' => 'Continuer à envoyer l\'e-mail d\'expédition de Livraison personnalisée',
     'Method' => 'Méthode',

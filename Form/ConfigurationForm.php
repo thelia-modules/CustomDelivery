@@ -59,7 +59,7 @@ class ConfigurationForm extends BaseForm
             return;
         }
 
-        if (!str_contains($value, '%ID%') || 1 !== preg_match('#^https?://[^\s/?\#@]+(?:[/?\#]\S*)?$#i', $value)) {
+        if (!CustomDelivery::isValidTrackingUrlTemplate($value)) {
             $context->addViolation(
                 $this->trans('The tracking URL must start with http:// or https:// and contain %ID%.')
             );
@@ -150,7 +150,7 @@ class ConfigurationForm extends BaseForm
                     'data' => $config['send_own_shipping_email'],
                     'label' => $this->trans("Keep sending the Custom Delivery shipping e-mail"),
                     'help' => $this->trans(
-                        "From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link. Tick this only to keep the module's e-mail during a transition: the customer would then receive both."
+                        "From Thelia 3.3 the shop sends its own shipping e-mail, with the tracking link, and the store configuration switches it on or off. Tick this only to keep the module's e-mail during a transition: with both switched on, the customer receives two e-mails."
                     ),
                 ]
             );

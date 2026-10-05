@@ -61,7 +61,7 @@ class ConfigurationForm extends BaseForm
 
         if (!CustomDelivery::isValidTrackingUrlTemplate($value)) {
             $context->addViolation(
-                $this->trans('The tracking URL must start with http:// or https:// and contain %ID%.')
+                $this->trans('The tracking URL must start with http:// or https:// and contain %ID% after the domain name.')
             );
         }
     }

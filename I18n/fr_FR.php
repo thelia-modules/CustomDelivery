@@ -17,7 +17,7 @@ return array(
     'The price value is not valid' => 'La valeur du prix n\'est pas valide',
     'The slice has not been deleted' => 'Votre tranche n\'a pas été supprimé',
     'The tax rule used to calculate postage taxes.' => 'La règle de taxe utilisée pour calculer les taxes associés à la livraison.',
-    'The tracking URL must start with http:// or https:// and contain %ID%.' => 'L\'URL de suivi doit commencer par http:// ou https:// et contenir %ID%.',
+    'The tracking URL must start with http:// or https:// and contain %ID% after the domain name.' => 'L\'URL de suivi doit commencer par http:// ou https:// et contenir %ID% après le nom de domaine.',
     'The tracking URL. %ID% will be replaced by the tracking number entered in the order' => 'L\'URL de suivi. %ID% sera remplacé par le numéro de suivi saisi dans la commande',
     'The weight max value is not valid' => 'La valeur du poids max n\'est pas valide',
     'Tracking URL' => 'URL de suivi',

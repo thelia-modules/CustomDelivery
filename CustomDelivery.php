@@ -131,6 +131,16 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
             return $resolver::isValidTemplate($template);
         }
 
+        return self::isValidTrackingUrlTemplateWithoutCore($template);
+    }
+
+    /**
+     * The same rule for a core that has none, kept public so it can be checked against
+     * the core rule wherever both exist.
+     */
+    public static function isValidTrackingUrlTemplateWithoutCore(string $template): bool
+    {
+        $template = trim($template);
         $authority = (string) preg_replace('#^https?://([^/?\#]*).*$#is', '$1', $template);
 
         return str_contains($template, '%ID%')

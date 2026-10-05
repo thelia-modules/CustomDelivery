@@ -8,7 +8,8 @@
 - The address can be edited on this module's configuration page or, from Thelia 3.3, on the
   shipping page of the module in the back office: both edit the same setting.
 - The tracking address is optional and must be an `http(s)` address containing `%ID%` outside the
-  host. The tracking number is url-encoded into it.
+  host. The tracking number is url-encoded into it. Without a valid address, the module's own
+  message gives the bare tracking number, as it did with the former default `%ID%`.
 - From Thelia 3.3 the core owns the shipping e-mail of every carrier, switched on or off in the
   store configuration: the module no longer sends `mail_custom_delivery`. A new setting, "Keep
   sending the Custom Delivery shipping e-mail", keeps it during a transition. On an older core the

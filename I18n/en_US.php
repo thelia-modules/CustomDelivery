@@ -17,7 +17,7 @@ return array(
     'The price value is not valid' => 'The price value is not valid',
     'The slice has not been deleted' => 'The slice has not been deleted',
     'The tax rule used to calculate postage taxes.' => 'The tax rule used to calculate postage taxes.',
-    'The tracking URL must start with http:// or https:// and contain %ID%.' => 'The tracking URL must start with http:// or https:// and contain %ID%.',
+    'The tracking URL must start with http:// or https:// and contain %ID% after the domain name.' => 'The tracking URL must start with http:// or https:// and contain %ID% after the domain name.',
     'The tracking URL. %ID% will be replaced by the tracking number entered in the order' => 'The tracking URL. %ID% will be replaced by the tracking number entered in the order',
     'The weight max value is not valid' => 'The weight max value is not valid',
     'Tracking URL' => 'Tracking URL',

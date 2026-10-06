@@ -1,3 +1,11 @@
+# 4.0.5
+
+- Activating the module no longer empties the shipping slices of a database that already holds them (a shop upgraded
+  from an older Thelia, where the `is_initialized` flag is missing): the install script runs without its
+  `DROP TABLE` statement and with `CREATE TABLE IF NOT EXISTS` (`Service/InstallSql`, unit tested).
+- Known, not handled here: creating the table commits the transaction `BaseModule::activate()` opens around
+  `postActivation()` (implicit commit of a MySQL DDL statement).
+
 # 4.0.2
 
 - Fixed the back-office configuration page rendering another module's configuration: the Twig

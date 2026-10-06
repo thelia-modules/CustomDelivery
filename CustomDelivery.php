@@ -14,6 +14,7 @@ namespace CustomDelivery;
 
 use CustomDelivery\Model\CustomDeliverySlice;
 use CustomDelivery\Model\CustomDeliverySliceQuery;
+use CustomDelivery\Service\InstallSql;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
@@ -97,8 +98,19 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
     {
         if (!$this->getConfigValue('is_initialized', false)) {
             $database = new Database($con);
+            $installScript = tempnam(sys_get_temp_dir(), 'customdelivery');
 
-            $database->insertSql(null, array(__DIR__ . '/Config/thelia.sql'));
+            if (false === $installScript) {
+                throw new \RuntimeException('Unable to write the CustomDelivery install script to the temporary directory');
+            }
+
+            file_put_contents($installScript, InstallSql::keepingExistingTables((string) file_get_contents(__DIR__ . '/Config/thelia.sql')));
+
+            try {
+                $database->insertSql(null, [$installScript]);
+            } finally {
+                unlink($installScript);
+            }
 
             $this->setConfigValue('is_initialized', true);
         }

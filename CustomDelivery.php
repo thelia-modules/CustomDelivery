@@ -37,12 +37,20 @@ use Thelia\Model\OrderPostage;
 use Thelia\Model\State;
 use Thelia\Module\AbstractDeliveryModuleWithState;
 use Thelia\Module\BaseModule;
+use Thelia\Module\DeliveryDateAwareInterface;
 use Thelia\Module\DeliveryModuleInterface;
 use Thelia\Module\Exception\DeliveryException;
+use Thelia\Domain\Shipping\DeliveryDate\Enum\DeliveryDateChoiceMode;
 use Thelia\Domain\Taxation\TaxEngine\Calculator;
 use Thelia\Tools\I18n;
 
-class CustomDelivery extends AbstractDeliveryModuleWithState
+// A core older than the delivery date contract has no such interface: an empty stand-in keeps
+// this class loadable there, and the buyer is simply offered no date.
+if (!interface_exists(DeliveryDateAwareInterface::class)) {
+    class_alias(Compat\DeliveryDateAwareFallback::class, DeliveryDateAwareInterface::class);
+}
+
+class CustomDelivery extends AbstractDeliveryModuleWithState implements DeliveryDateAwareInterface
 {
     const MESSAGE_DOMAIN = "customdelivery";
 
@@ -73,6 +81,17 @@ class CustomDelivery extends AbstractDeliveryModuleWithState
     const METHOD_PRICE_WEIGHT = 0;
     const METHOD_PRICE = 1;
     const METHOD_WEIGHT = 2;
+
+    /**
+     * A carrier of its own rounds: the merchant may let the buyer pick a day, or a slot of a
+     * day, in the delivery date settings of the back office.
+     *
+     * @return list<DeliveryDateChoiceMode>
+     */
+    public function getAcceptedDeliveryDateChoiceModes(): array
+    {
+        return [DeliveryDateChoiceMode::Date, DeliveryDateChoiceMode::Slot];
+    }
 
     /** @var Translator */
     protected $translator;

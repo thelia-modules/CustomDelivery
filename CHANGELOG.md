@@ -1,4 +1,4 @@
-# Unreleased
+# 4.2.0
 
 - Accepts delivery dates: on a core that offers them, the merchant can let the buyer pick a day, or a
   slot of a day, for this carrier in the delivery date settings. On an older core nothing changes.

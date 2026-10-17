@@ -1,0 +1,11 @@
+# Symbols of a core newer than the published one, used behind interface_exists() in CustomDelivery.php.
+# Kept out of the report so that PHPStan runs against the published core; an entry the core catches up with is not reported.
+parameters:
+    reportUnmatchedIgnoredErrors: false
+    bootstrapFiles:
+        - Tests/phpstan-bootstrap.php
+    ignoreErrors:
+        -
+            message: '#^Access to constant (Date|Slot) on an unknown class Thelia\\Domain\\Shipping\\DeliveryDate\\Enum\\DeliveryDateChoiceMode\.$#'
+            count: 2
+            path: CustomDelivery.php

@@ -1,0 +1,32 @@
+{% extends "email-layout.html.twig" %}
+
+{# Open in browser #}
+{% block browser %}{% endblock %}
+
+{# No pre-header #}
+{% block pre_header %}{% endblock %}
+
+{# Subject #}
+{% block email_subject %}{{ 'Your order %order_ref% dated %order_date% has been shipped on %update_date%'|trans({'%order_ref%': order_ref|default(''), '%order_date%': format_date(order_date, 'date'), '%update_date%': format_date(update_date, 'date')}, 'email', locale) }}{% endblock %}
+
+{# Title #}
+{% block email_title %}{% endblock %}
+
+{# Content #}
+{% block email_content %}
+    {% for customer in loop('customer.order', 'customer', {current: false, id: customer_id, backend_context: 1}) %}
+        <p>{{ 'Dear'|trans({}, 'email', locale) }} {{ customer.LASTNAME }} {{ customer.FIRSTNAME }},</p>
+    {% endfor %}
+
+    <p>{{ 'Thank you for your order on our online store %store_name%'|trans({'%store_name%': config('store_name')}, 'email', locale) }}</p>
+    <p>{{ 'Your order %order_ref% dated %order_date% has been shipped on %update_date%'|trans({'%order_ref%': order_ref|default(''), '%order_date%': format_date(order_date, 'date'), '%update_date%': format_date(update_date, 'date')}, 'email', locale) }}</p>
+    {% if package is defined and package is not empty %}
+        <p>{{ 'The tracking number for this delivery is: %package%'|trans({'%package%': package}, 'email', locale) }}</p>
+        {% if tracking_url is defined and tracking_url is not empty %}
+            <p>{{ 'Please check this URL to track your parcel : %tracking_url%'|trans({'%tracking_url%': '<a href="' ~ tracking_url|e('html_attr') ~ '">' ~ tracking_url|e ~ '</a>'}, 'email', locale)|raw }}</p>
+        {% endif %}
+    {% endif %}
+    <p>{{ 'Feel free to contact us for any further information'|trans({}, 'email', locale) }}</p>
+
+    <p>{{ 'Best Regards.'|trans({}, 'email', locale) }}</p>
+{% endblock %}

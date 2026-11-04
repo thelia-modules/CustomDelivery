@@ -1,0 +1,16 @@
+{% for customer in loop('customer.order', 'customer', {current: false, id: customer_id, backend_context: 1}) %}
+{{ 'Dear'|trans({}, 'email', locale) }} {{ customer.LASTNAME }} {{ customer.FIRSTNAME }},
+{% endfor %}
+
+{{ 'Thank you for your order on our online store %store_name%'|trans({'%store_name%': config('store_name')}, 'email', locale) }}
+
+{{ 'Your order %order_ref% dated %order_date% has been shipped on %update_date%'|trans({'%order_ref%': order_ref|default(''), '%order_date%': format_date(order_date, 'date'), '%update_date%': format_date(update_date, 'date')}, 'email', locale) }}
+{% if package is defined and package is not empty %}
+{{ 'The tracking number for this delivery is: %package%'|trans({'%package%': package}, 'email', locale) }}
+{% if tracking_url is defined and tracking_url is not empty %}
+{{ 'Please check this URL to track your parcel : %tracking_url%'|trans({'%tracking_url%': tracking_url}, 'email', locale) }}
+{% endif %}
+{% endif %}
+{{ 'Feel free to contact us for any further information'|trans({}, 'email', locale) }}
+
+{{ 'Best Regards.'|trans({}, 'email', locale) }}

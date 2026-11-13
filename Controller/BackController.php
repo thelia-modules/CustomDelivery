@@ -17,6 +17,7 @@ use CustomDelivery\CustomDelivery;
 use CustomDelivery\Form\ConfigurationForm;
 use CustomDelivery\Model\CustomDeliverySlice;
 use CustomDelivery\Model\CustomDeliverySliceQuery;
+use CustomDelivery\Service\DecimalInput;
 use Propel\Runtime\Map\TableMap;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -140,11 +141,7 @@ class BackController extends BaseAdminController
 
     protected function getFloatVal($val, $default=-1)
     {
-        if (preg_match("#^([\d.,]+)$#", $val, $match)) {
-            return (float) str_replace(array('.', ','), array('', '.'), $match[0]);
-        }
-
-        return $default;
+        return DecimalInput::parse($val, (float) $default);
     }
 
     /**

@@ -1,3 +1,8 @@
+# 4.2.1
+
+- A slice price, maximum price or maximum weight keeps its decimal point: "5.90" and "5,90" are both saved as 5.9, and a value shown as 9.9 is saved back as 9.9 instead of 99. A slice saved with the former behaviour keeps the value it was saved with and has to be corrected by hand.
+- French labels of the configuration page: "gérer", "zones de livraison".
+
 # 4.2.0
 
 - Accepts delivery dates: on a core that offers them, the merchant can let the buyer pick a day, or a

@@ -14,6 +14,6 @@ return array(
     'Slices.' => 'Tranches.',
     'Untaxed Price up to ... %symbol' => 'Prix HT jusqu\'à ... %symbol',
     'Weight up to ... kg' => 'Poids jusqu\'à ... kg',
-    'You should first attribute shipping zones to the modules: ' => 'Vous devez d\'abord attribuer des zones de livraisons au module :',
-    'manage shipping zones' => 'gèrer les zones de livraisons',
+    'You should first attribute shipping zones to the modules: ' => 'Vous devez d\'abord attribuer des zones de livraison au module :',
+    'manage shipping zones' => 'gérer les zones de livraison',
 );
